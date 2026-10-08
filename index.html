@@ -1,678 +1,285 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Quacks of Quedlinburg (Prototype v3)</title>
+<title>Redline: Retro Space Race (Prototype)</title>
 <style>
-:root{--bg:#f6efe0;--card:#fffaf0;--ink:#2b2118;--mut:#7a6a58;--acc:#7b3fa0;--bad:#c0392b;--ok:#2e8b57;--line:#d9c9ae;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1812;--card:#2a231a;--ink:#f1e6d2;--mut:#a8977f;--line:#4a3f30}}
-:root[data-theme="dark"]{--bg:#1d1812;--card:#2a231a;--ink:#f1e6d2;--mut:#a8977f;--line:#4a3f30}
+:root{--bg:#efeaff;--stars:none;--card:#ffffff;--ink:#1b1740;--mut:#6b6896;--acc:#ff5fa2;--acc2:#18b8aa;--bad:#e5484d;--ok:#1f9d7a;--line:#d6cdf5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0b2b;--card:#191550;--ink:#f3eeff;--mut:#a9a3de;--line:#3a3490;--acc2:#4de1d2;--stars:radial-gradient(1.5px 1.5px at 20px 30px,#fff,transparent),radial-gradient(1px 1px at 90px 70px,#bff,transparent),radial-gradient(1.5px 1.5px at 150px 20px,#fdf,transparent),radial-gradient(1px 1px at 60px 120px,#fff,transparent)}}
+:root[data-theme="dark"]{--bg:#0d0b2b;--card:#191550;--ink:#f3eeff;--mut:#a9a3de;--line:#3a3490;--acc2:#4de1d2;--stars:radial-gradient(1.5px 1.5px at 20px 30px,#fff,transparent),radial-gradient(1px 1px at 90px 70px,#bff,transparent),radial-gradient(1.5px 1.5px at 150px 20px,#fdf,transparent),radial-gradient(1px 1px at 60px 120px,#fff,transparent)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,sans-serif}
+body{margin:0;background-color:var(--bg);background-image:var(--stars);background-size:180px 150px;color:var(--ink);font:16px/1.4 "Trebuchet MS","Avenir Next",system-ui,sans-serif}
 #app{max-width:560px;margin:0 auto;padding:12px}
-h1{font-size:21px;margin:4px 0}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
-button,select{font:inherit;border:0;border-radius:10px;padding:9px 12px;background:var(--acc);color:#fff;cursor:pointer;margin:3px 3px 3px 0}
-select{background:var(--card);color:var(--ink);border:1px solid var(--line)}
-button.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+h1{font-size:22px;margin:4px 0;letter-spacing:2px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:12px;margin:10px 0}
+button,select,input{font:inherit;border-radius:12px;padding:10px 14px;margin:3px 3px 3px 0}
+button{border:0;background:var(--acc);color:#fff;cursor:pointer;font-weight:700;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+button:active{transform:translateY(2px);box-shadow:none}
+button.alt{background:transparent;color:var(--ink);border:2px solid var(--line);box-shadow:none}
 button.go{background:var(--ok)}button.stop{background:var(--bad)}
 button:disabled{opacity:.4}
+select,input{border:2px solid var(--line);background:var(--card);color:var(--ink)}
+input.nm{width:calc(50% - 12px)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.chip{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;border-radius:50%;border:2px solid rgba(0,0,0,.35);color:#222;font-weight:700;font-size:14px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
-.chip.k{color:#fff}
+.mut{color:var(--mut);font-size:13px}.big{font-size:20px;font-weight:800}
+.cl{display:inline-flex;position:relative;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:11px;border:2px solid rgba(0,0,0,.3);background:linear-gradient(150deg,#ffffffaa,var(--c));color:#222;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
+.cl i{font-style:normal;font-size:16px}.cl b{position:absolute;right:1px;bottom:-1px;font-size:11px;background:#222c;color:#fff;border-radius:6px;padding:0 4px}
+.cl.mini{width:24px;height:24px;border-radius:8px}.cl.mini i{font-size:11px}.cl.mini b{font-size:8px;padding:0 2px}
 .pot{display:flex;flex-wrap:wrap;gap:5px;min-height:38px}
-.track{display:grid;grid-template-columns:repeat(18,1fr);gap:2px}
-.cell{font-size:8px;text-align:center;border:1px solid var(--line);border-radius:3px;padding:3px 0;color:var(--mut);min-height:22px}
-.cell.rb{color:var(--bad);font-weight:700}
-.cell.sc{outline:2px solid var(--acc)}.cell.dr{border-bottom:3px solid var(--ok)}
-.bar{height:18px;border-radius:9px;background:var(--line);overflow:hidden}
-.bar>div{height:100%;transition:width .3s,background .3s}
-table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:3px 4px;border-bottom:1px solid var(--line)}
-.mut{color:var(--mut);font-size:13px}.big{font-size:20px;font-weight:700}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
-.modal .card{max-width:420px;width:100%;max-height:80%;overflow:auto}
-.dead{opacity:.5;text-decoration:line-through}
-.tile{flex:1;min-width:64px;text-align:center;border:1px solid var(--line);border-radius:12px;padding:6px;animation:pop .5s both}@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
-.tile.s{animation:none;padding:4px}
+.gauge{display:grid;grid-template-columns:repeat(18,1fr);gap:2px}
+.gc{font-size:8px;text-align:center;border:1px solid var(--line);border-radius:4px;padding:3px 0;color:var(--mut);min-height:20px}
+.gc.st{border-bottom:3px solid var(--ok)}.gc.now{outline:2px solid var(--acc)}
+.bar{height:18px;border-radius:9px;background:var(--line);overflow:hidden}.bar>div{height:100%;transition:width .3s,background .3s}
+.lane{margin:8px 0}.trk{position:relative;height:26px;border-radius:13px;background:var(--line);margin-top:4px}
+.sh{position:absolute;top:-2px;font-size:22px;transition:left .8s;transform:translateX(-50%)}.fl{position:absolute;right:6px;top:2px}
+.tile{flex:1;min-width:64px;text-align:center;border:2px solid var(--line);border-radius:14px;padding:6px;animation:pop .5s both}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.modal{position:fixed;inset:0;background:rgba(5,3,30,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .card{max-width:430px;width:100%;max-height:82%;overflow:auto}
 .scene{position:relative;height:130px;width:300px;max-width:100%;margin:10px auto;overflow:hidden;padding:0}
-.bagE{position:absolute;left:10px;bottom:6px;width:90px;transform-origin:50% 90%}.cauld{position:absolute;right:10px;bottom:4px;width:150px}
-.fly{position:absolute;left:38px;top:40px;z-index:2;animation:fly .7s ease-in-out forwards}
-@keyframes fly{0%{transform:translate(0,20px) scale(.5);opacity:0}20%{opacity:1}55%{transform:translate(80px,-34px) scale(1.15) rotate(180deg)}100%{transform:translate(165px,20px) scale(.7) rotate(360deg);opacity:0}}
+.tank{position:absolute;left:10px;bottom:6px;width:90px;transform-origin:50% 90%}.eng{position:absolute;right:10px;bottom:4px;width:150px}
+.fly{position:absolute;left:38px;top:40px;z-index:2;animation:fly .9s ease-in-out forwards}
+@keyframes fly{0%{transform:translate(0,34px) scale(.3);opacity:0}12%{transform:translate(8px,6px) scale(.9) rotate(40deg);opacity:1}35%{transform:translate(52px,-58px) scale(1.2) rotate(200deg)}55%{transform:translate(105px,-40px) scale(1.1) rotate(330deg)}75%{transform:translate(150px,8px) scale(1) rotate(420deg)}100%{transform:translate(170px,28px) scale(.4) rotate(520deg);opacity:0}}
 .shake{animation:shake .5s}@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg) translateY(-3px)}40%{transform:rotate(7deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}}
-.hot{animation:hot .3s infinite alternate}@keyframes hot{to{transform:translateY(-2px) rotate(1.5deg)}}
-.bub{transform-box:fill-box;animation:bub 2s infinite}@keyframes bub{0%{transform:translateY(0);opacity:.7}100%{transform:translateY(-12px);opacity:0}}
-.boomS{animation:bshake .5s}@keyframes bshake{0%,100%{transform:translate(0)}25%{transform:translate(-6px,3px)}50%{transform:translate(6px,-3px)}75%{transform:translate(-4px,2px)}}
+.flame{transform-box:fill-box;transform-origin:50% 0;animation:fl .18s infinite alternate}@keyframes fl{to{transform:scaleY(1.18) scaleX(.92)}}
+.pop{animation:popin .5s .85s both}@keyframes popin{from{transform:scale(0)}60%{transform:scale(1.35)}to{transform:scale(1)}}
 .burst{position:absolute;right:55px;top:6px;font-size:60px;animation:burst .9s forwards;z-index:3}@keyframes burst{0%{transform:scale(.2);opacity:0}40%{transform:scale(1.4);opacity:1}100%{transform:scale(2.2) translateY(-20px);opacity:0}}
-.pop{animation:popin .5s .6s both}@keyframes popin{from{transform:scale(0)}60%{transform:scale(1.35)}to{transform:scale(1)}}
-.die{display:inline-block;font-size:40px;width:80px;height:80px;line-height:80px;border-radius:16px;background:#fff;color:#222;box-shadow:0 4px 0 rgba(0,0,0,.25),inset 0 0 0 3px #ddd}
-.rolling{animation:roll .3s infinite linear}@keyframes roll{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(180deg) translateY(-12px)}100%{transform:rotate(360deg) translateY(0)}}
-.land{animation:land .5s}@keyframes land{0%{transform:scale(1.5) rotate(-20deg)}60%{transform:scale(.9)}100%{transform:scale(1)}}
-.later{animation:fadeIn .4s 1.3s both}@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.chip.mini{width:24px;height:24px;font-size:11px;border-width:1px}
-.tube{display:flex;gap:3px;flex-wrap:wrap}.glass{min-width:30px;height:36px;border:1px solid var(--line);border-radius:8px 8px 14px 14px;display:flex;align-items:center;justify-content:center;font-size:12px;padding:0 2px}.glass.done{opacity:.35}.glass.next{outline:2px solid var(--ok)}
-.fly{animation:fly .9s ease-in-out forwards}
-@keyframes fly{0%{transform:translate(0,34px) scale(.3);opacity:0}12%{transform:translate(8px,6px) scale(.9) rotate(60deg);opacity:1}35%{transform:translate(52px,-58px) scale(1.2) rotate(240deg)}55%{transform:translate(105px,-40px) scale(1.1) rotate(380deg)}72%{transform:translate(150px,8px) scale(1) rotate(480deg)}80%{transform:translate(160px,-6px) scale(.9) rotate(520deg)}90%{transform:translate(168px,20px) scale(.7) rotate(560deg);opacity:1}100%{transform:translate(170px,28px) scale(.4) rotate(600deg);opacity:0}}
-.splash{position:absolute;left:180px;top:46px;width:70px;height:18px;border-radius:50%;border:3px solid var(--c);opacity:0;animation:splash .6s .72s both;z-index:1}
-@keyframes splash{0%{transform:scale(.2);opacity:.9}100%{transform:scale(1.5);opacity:0}}
 .flash{position:absolute;inset:0;background:#ff4a2a;opacity:0;animation:flash .6s;z-index:2;pointer-events:none}@keyframes flash{0%{opacity:.85}100%{opacity:0}}
-.pop{animation:popin .5s .85s both}
-input[id^=pn]{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 10px;margin:3px 3px 3px 0;width:calc(50% - 10px)}
-#jcode,#jname{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 10px;margin:3px 3px 3px 0;width:40%;text-transform:uppercase}
-.code{font-size:56px;font-weight:800;letter-spacing:8px;text-align:center}
-.nb{position:sticky;top:0;z-index:20;background:var(--bad);color:#fff;padding:6px 10px;border-radius:10px;margin-bottom:6px;font-weight:700;text-align:center}
-.rxc{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30}
-.rxe{position:absolute;bottom:-40px;font-size:44px;text-align:center;animation:rise 3.2s ease-out forwards}.rxe small{display:block;font-size:12px;color:var(--ink)}
-@keyframes rise{to{transform:translateY(-70vh) scale(1.3);opacity:0}}
-</style><script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
-</head><body><div id="app"></div>
+.hot{animation:hot .3s infinite alternate}@keyframes hot{to{transform:translateY(-2px) rotate(1.5deg)}}
+.starnew{animation:flip .7s}@keyframes flip{from{transform:rotateY(90deg);opacity:0}to{transform:none;opacity:1}}
+</style></head><body><div id="app"></div>
 <script>
-const ROUNDS=9,RUBYF=[5,9,13,16,20,24,28,30,34,36,40,42,46,50,52];
-const TV=[0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,7,7,7,8,8,8,9,9,9,10,10,10,11,11,11,12,12,12,12,13,13,13,14,14,15];
-const TC=[...Array(16).keys(),15,...Array.from({length:18},(_,k)=>16+k).flatMap(x=>[x,x]),35];
-const COL={o:['Orange','#f08a24'],g:['Green','#4fbf5a'],b:['Blue','#5b9cf0'],r:['Red','#e0453a'],y:['Yellow','#f5d63d'],p:['Purple','#a56ad8'],k:['Black','#2b2b2b'],w:['White','#f4efe0']};
-const CST={b:[[5,10,19],[5,10,19],[4,8,14],[5,10,20]],r:[[6,10,16],[4,8,14],[5,9,15],[7,11,17]],y:[[8,12,18],[9,13,19],[8,12,18],[8,12,18]],g:[[4,8,14],[6,11,18],[6,11,21],[4,8,14]],p:[[9],[12],[10],[11]]};
-const CH={w1:{col:'w',v:1,w:1},w2:{col:'w',v:2,w:2},w3:{col:'w',v:3,w:3},o1:{col:'o',v:1,cost:3},k1:{col:'k',v:1,cost:10}};
-for(const c in CST)for(let ver=1;ver<=4;ver++)(c=='p'?[1]:[1,2,4]).forEach((v,i)=>CH[c+v+'_'+ver]={col:c,v,ver,cost:CST[c][ver-1][i]});
-for(const k in CH)CH[k].hex=COL[CH[k].col][1];
-const DESC={o:'No action.',k:'End: more black chips than your opponent(s) moves your droplet; clearly more also gives a ruby.',
-b1:'Draw extra chips equal to its value; place one (or none), return the rest.',b2:'Next chips (as many as its value) cannot cost you VP/shopping if you explode (no bonus die).',b3:'On a ruby field: +1 ruby.',b4:'On a ruby field: VP equal to its value.',
-r1:'Moves extra: +1 with 1-2 orange in pot, +2 with 3+.',r2:'Set aside; after you stop it is placed after the last chip.',r3:'Moves extra by the value of the previous chip if that was white.',r4:'With a red in your pot, white 1s move 2 spaces.',
-y1:'If drawn right after a white chip, return that white to the bag.',y2:'Next chip you place moves twice as far.',y3:'White limit rises to 8, and 9 after 3 yellows.',y4:'1st yellow moves +1, 2nd +2, 3rd +3.',
-g1:'End: 1 ruby per green on the last or second-to-last space.',g2:'End: such greens add chips: 1 gives orange, 2 gives blue 1, 4 gives yellow 1.',g3:'End: move last chip by total green value (doubled if whites total exactly 7).',g4:'End: pay 1 ruby per such green to move droplet 1.',
-p1:'End: 1 purple = 1 VP; 2 = 1 VP + ruby; 3+ = 2 VP + droplet.',p2:'End: trade purples for chips, VP, rubies, droplet (1, 2 or 3 purples).',p3:'End: VP by purple field: 10-19 = 1, 20-29 = 2, 30+ = 3.',p4:'End: upgrade a chip of the same color (1 to 2, 2 to 4, or 1 to 4).'};
-const dsc=c=>DESC[c.col+(c.ver||'')]||DESC[c.col];
-const CARDS=['Everyone moves their droplet +1.','Everyone gains 1 ruby.','Everyone rolls the bonus die.','Everyone gains 1 VP.','Choose: droplet +1 or 1 ruby.','Last place moves droplet +1.','Last place gains 1 ruby.','With 0-1 rat tails: droplet +1.','Everyone\'s rat stone +1 this round.','May pay 2 rubies: droplet +1.','May pay 2 rubies: gain 1 VP.','Everyone gains 1 VP per rat tail used.',
-'If you explode: take BOTH VP and coins.','No explosion: +1 ruby at round end.','Flask refill costs 1 ruby.','You may buy two chips of the same color.','Placing a white 3: +1 ruby.','Scoring on a ruby field: 2 rubies instead of 1.','One chip you buy costs 1 less.','Droplet moves cost 1 ruby this round (adapted).','Using the flask: +1 ruby.','Buy the priciest chip: +1 VP (solo: a chip costing 10+).','Look at your first chip: place or return it.','At round end, rubies convert to VP 1:1.'];
-const price=(c,p)=>Math.max(0,c.cost-(G.card==19&&!p.buys?1:0)),fc=()=>G.card==15?1:2,dc=()=>G.card==20?1:2;
-const deckInit=()=>{const a=Array.from({length:24},(_,i)=>i+1).filter(c=>G.mode!='single'||![8,9,12].includes(c));for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}G.deck=a.slice(0,9)};
-const DIE={vp1:'+1 VP',vp2:'+2 VP',ruby:'+1 ruby',drop:'droplet +1',orange:'a free orange chip'};
-function mark(p,i,l){
- const m=[p.vp,p.rub,dsum(p),p.bag.length,sc(p),p.pot.map(e=>e.k).join()],o=p._m;p._m=m;
- if(!o||p.ai||!p.sum)return;
- const t=[];if(m[0]>o[0])t.push('+'+(m[0]-o[0])+' VP');if(m[1]>o[1])t.push('+'+(m[1]-o[1])+' 💎');if(m[1]<o[1])t.push('paid '+(o[1]-m[1])+' 💎');if(m[2]>o[2])t.push('droplet +'+(m[2]-o[2]));if(m[4]>o[4])t.push('last chip moves +'+(m[4]-o[4]));if(m[5]!=o[5])t.push('a chip was upgraded/traded');
- const ch=m[3]>o[3]?p.bag.slice(o[3]):[];if(ch.length)t.push('new chips:');
- if(t.length)p.sum.lines.push({i,t:l+': '+t.join(', '),chips:ch});
-}
-function stopPreview(me){const s=sc(me),rr=(RUBYF.includes(s)?(G.card==18?2:1):0)+(G.card==14?1:0);
- const t=(i,v,l)=>`<div class="tile s"><div>${i}</div><div class="big">${v}</div><div class="mut">${l}</div></div>`;
- return`<div class="card"><b>If you stop now</b> <span class="mut">(field ${s})</span><div class="row" style="flex-wrap:nowrap;margin-top:6px">${t('⭐',TV[s],'VP')}${t('🪙',TC[s],'coins')}${t('💎',rr,'rubies')}</div></div>`}
-function scene(me){
- const f=G.fresh&&me.pot.length,l=me.pot[me.pot.length-1],boom=me.ph=='boom',w=wsum(me),lim=thr(me);
- const lq=[...me.pot].reverse().map(e=>CH[e.k]).find(c=>c.col!='w'),lc=lq?lq.hex:'#58b8a8';
- return`<div class="card scene ${boom?'boomS':''}"><svg class="bagE ${f?'shake':''}" viewBox="0 0 90 100"><path d="M25 18 Q45 4 65 18 L62 28 Q85 50 80 82 Q45 100 10 82 Q5 50 28 28Z" fill="#b98c5a" stroke="#6b4a26" stroke-width="3"/><path d="M28 28 Q45 36 62 28" fill="none" stroke="#6b4a26" stroke-width="3"/><text x="45" y="72" text-anchor="middle" font-size="18" font-weight="700" fill="#3b2a14">${me.bag.length}</text></svg>
- <svg class="cauld ${w>=lim-1&&!boom?'hot':''}" viewBox="0 0 150 110"><ellipse cx="75" cy="102" rx="55" ry="7" fill="rgba(0,0,0,.25)"/><path d="M20 40 Q10 95 45 100 L105 100 Q140 95 130 40Z" fill="#3d3d46" stroke="#1d1d22" stroke-width="3"/><ellipse cx="75" cy="40" rx="55" ry="14" fill="#2a2a31" stroke="#1d1d22" stroke-width="3"/><ellipse cx="75" cy="40" rx="48" ry="10" fill="${boom?'#e0453a':lc}"/><circle class="bub" cx="58" cy="40" r="4" fill="#fff" opacity=".6"/><circle class="bub" style="animation-delay:.7s" cx="80" cy="42" r="3" fill="#fff" opacity=".6"/><circle class="bub" style="animation-delay:1.3s" cx="95" cy="39" r="4" fill="#fff" opacity=".6"/><text x="75" y="80" text-anchor="middle" font-size="20" font-weight="700" fill="${w>=lim-1?'#ff8a7a':'#f1e6d2'}">${w}/${lim}</text></svg>
- ${f&&l?`<div class="fly">${chip(l.k)}</div><div class="splash" style="--c:${CH[l.k].hex}"></div>`:''}${boom?'<div class="burst">💥</div><div class="flash"></div>':''}</div>`}
-const FACE={vp1:'⭐',vp2:'⭐⭐',ruby:'💎',drop:'💧',orange:'🟠'};
-function dieBox(S){if(!S.die)return'';return`<div style="text-align:center;margin:6px 0"><div id="die" class="die ${S.dieDone?'land':'rolling'}">${S.dieDone?FACE[S.die]:'🎲'}</div><div id="dieT" class="mut">${S.dieDone?'Bonus die: '+DIE[S.die]+'!':'Rolling the bonus die...'}</div></div>`}
-function rollAnim(){const S=G&&G.alive&&viewer().sum;if(!S||!S.die||S.dieDone||S.anim)return;S.anim=true;const fs=Object.values(FACE);let n=0;
- const iv=setInterval(()=>{const d=$('die');if(d)d.textContent=fs[n++%fs.length];sfxTick();
-  if(n>10){clearInterval(iv);S.dieDone=true;sfxChime();const d2=$('die'),t=$('dieT');if(d2){d2.textContent=FACE[S.die];d2.className='die land'}if(t)t.textContent='Bonus die: '+DIE[S.die]+'!'}},120)}
-let TM=0,useTT=false,REF=false,REFT='r';
-const NET={role:null,room:null,R:null,code:'',seat:-1,seats:[],ai:1,seq:0,q:[],bcT:0,hb:0,af:0,conn:false,haveMe:false,hostSeen:0,lobby:null,pm:null,kicked:new Set(),rxT:0,lastMsg:0,toast:null,dl:null,ap:0,ready:false};
-const RULES=[['🎯 Goal','Play 9 rounds. The most VP wins (in solo, chase a high score).'],
-['🧪 Brewing','Draw chips one at a time. Each chip moves along your pot by its value. White chips add up: more than 7 and the pot explodes. Stop whenever you like to score.'],
-['📍 Scoring','Your scoring field is the one right after your last chip. It pays coins to spend and VP. Fields marked ◆ also give a ruby.'],
-['💥 Exploding','You still place the last chip, then choose the field’s VP or its coins, not both. No bonus die.'],
-['🛒 Shop','Buy up to 2 chips of different colors with your coins. Leftover coins are lost, so spend them. Yellow unlocks in round 2, purple in round 3.'],
-['💎 Rubies','Spend 2 rubies to move your droplet 1 space (a better start every round) or to refill your flask.'],
-['🧴 Flask','After drawing a white chip that did not explode, return it to the bag. Once per round until refilled.'],
-['🎲 Bonus die','Solo: roll when you do not explode. Duels and Survival: the furthest non-exploded brewer rolls. Faces: 1 VP, 2 VP, ruby, droplet, orange chip.'],
-['🐀 Rat stone','In duels and Survival, trailing brewers start with extra filled spaces.'],
-['📆 Round 6','Everyone adds one more white 1-chip to their bag.'],
-['🏁 Finish','After round 9, every 5 coins or 2 rubies left over becomes 1 VP.'],
-['🧪 Test tube','Optional advanced side: each droplet move can go on a second 12-glass track with instant bonuses.']];
-function refRow(k,head,desc){return`<div class="row" style="margin:4px 0;flex-wrap:nowrap">${chip(k)}<div style="flex:1;min-width:0"><b>${head}</b><div class="mut">${desc}</div></div></div>`}
-function refHTML(){
- const tabs=[['r','Rules'],['c','Chips'],['f','Fortune']].map(([k,n])=>`<button class="${REFT==k?'':'alt'}" onclick="REFT='${k}';render()">${n}</button>`).join('');
- let b='';
- if(REFT=='r')b=RULES.map(([t,x])=>`<div style="margin:8px 0"><b>${t}</b><div class="mut">${x}</div></div>`).join('');
- if(REFT=='c'){b=`<div class="mut">★ marks the version in your current game.</div>`+refRow('w1','White 1, 2, 3','No action. Their values add up toward the explosion limit of 7.');
-  for(const c of 'ogbrypk'){b+=`<div style="margin:12px 0 2px"><b>${COL[c][0]}</b></div>`;
-   if(c=='o')b+=refRow('o1','Cost 3',DESC.o);
-   else if(c=='k')b+=refRow('k1','Cost 10',DESC.k);
-   else for(let v=1;v<=4;v++)b+=refRow(c+'1_'+v,'Set '+v+' · '+CST[c][v-1].join('/')+'🪙'+(G&&G.sets&&G.sets[c]==v?' ★':''),DESC[c+v])}}
- if(REFT=='f')b=`<div class="mut">One card per round. 🟣 resolves before the round, 🔵 applies during or at the end of it. Solo skips the rat-tail cards (8, 9, 12).</div>`+CARDS.map((t,i)=>`<div class="row" style="margin:4px 0;flex-wrap:nowrap"><span>${i<12?'🟣':'🔵'}</span><span><b>${i+1}.</b> ${t}</span></div>`).join('');
- return`<div class="modal" onclick="REF=false;render()"><div class="card" onclick="event.stopPropagation()"><div class="row" style="justify-content:space-between"><b class="big">📖 Reference</b><button class="alt" onclick="REF=false;render()">Close</button></div><div>${tabs}</div>${b}</div></div>`}
-function renderMain(){render0();const a=$('app');if(!a.insertAdjacentHTML)return;if(G&&G.intro&&G.st)a.insertAdjacentHTML('beforeend',introHTML());if(REF)a.insertAdjacentHTML('beforeend',refHTML())}
-let AC=null,NB=null,amb=null,SND=true,HAP=true;
-try{SND=localStorage.getItem('qSnd')!=='0';HAP=localStorage.getItem('qHap')!=='0'}catch(e){}
-function ac(){if(!SND)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate*2,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;NB=b}catch(e){AC=null;return null}}
- if(AC.state=='suspended')AC.resume();return AC}
-function noise(dur,f0,f1,vol,type,q){const a=ac();if(!a)return;const t=a.currentTime,s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();
- s.buffer=NB;f.type=type||'bandpass';f.Q.value=q||1;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(f1,t+dur);
- g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);s.stop(t+dur+.05)}
-function tone(f0,f1,dur,vol,type){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();
- o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
- g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05)}
-function sfxDraw(r){noise(.2,500,1300,.25,'bandpass',2);
- setTimeout(()=>{tone(300+r*900,520+r*1500,.12,.15);noise(.25+.3*r,2000+3500*r,6000+3000*r,.08+.2*r,'highpass')},380)}
-function sfxBoom(){noise(1.3,1600,60,.9,'lowpass',.7);tone(170,28,.9,.8,'sawtooth');noise(.35,4500,200,.5,'highpass')}
-function sfxChime(){tone(660,660,.15,.2,'triangle');setTimeout(()=>tone(990,990,.3,.2,'triangle'),130)}
-function sfxTick(){tone(900,600,.05,.1,'square')}
-function fizz(r){if(!AC)return;
- if(!amb){const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;s.loop=true;f.type='bandpass';f.Q.value=1.5;g.gain.value=0;s.connect(f);f.connect(g);g.connect(AC.destination);s.start();amb={f,g}}
- const t=AC.currentTime;if(!SND||r==null){amb.g.gain.setTargetAtTime(0,t,.1);return}
- amb.f.frequency.setTargetAtTime(700+3500*r,t,.2);amb.g.gain.setTargetAtTime(.01+.07*r*r,t,.2)}
+const FIN=50,LIM=8,MAXL=10,GN=36,PWR=[6,10,15,21,28],VENT=3,TA=.15,TB=.004;
+const thrust=p=>1+Math.floor(TA*p+TB*p*p),cred=p=>p+Math.floor(p/5);
+const C={p1:{n:'Plasma',ic:'🔥',v:1,hex:'#ffe3b3',f:'p'},p2:{n:'Plasma',ic:'🔥',v:2,hex:'#ffe3b3',f:'p'},p3:{n:'Plasma',ic:'🔥',v:3,hex:'#ffe3b3',f:'p'},
+s1:{n:'Scrap',ic:'🔩',v:1,cost:2,hex:'#a7b1c6',f:'s',d:'Plain filler. Cheap thrust.'},
+c1:{n:'Coolant',ic:'❄️',v:1,cost:4,hex:'#6fe3e1',f:'c',d:'Burn 3 in one leg and your heat limit rises by 1. Each also pays 1 credit.'},
+i1:{n:'Ion',ic:'⚡',v:1,cost:5,hex:'#9a8bff',f:'i',d:'Chain: +1 move for each Ion burned earlier this leg (max +3).'},
+i2:{n:'Ion',ic:'⚡',v:2,cost:9,hex:'#9a8bff',f:'i',d:'Chain: +1 move for each Ion burned earlier this leg (max +3).'},
+i4:{n:'Ion',ic:'⚡',v:4,cost:16,hex:'#9a8bff',f:'i',d:'Chain: +1 move for each Ion burned earlier this leg (max +3).'},
+a1:{n:'Antimatter',ic:'🌀',v:1,cost:7,hex:'#ff7ab8',f:'a',d:'Redshift: +1 move for every 2 heat on your gauge. Thrives on risk.'},
+a2:{n:'Antimatter',ic:'🌀',v:2,cost:12,hex:'#ff7ab8',f:'a',d:'Redshift: +1 move for every 2 heat on your gauge. Thrives on risk.'},
+g1:{n:'Solar',ic:'☀️',v:1,cost:6,hex:'#ffd45c',f:'g',d:'Charge: each Solar burned lifts next leg\'s starting notch by 1 (max +3).'},
+k2:{n:'Slingshot',ic:'🪐',v:2,cost:7,hex:'#ff9a6a',f:'k',d:'Draft: when behind the leader, +1 move per 8 distance behind (max +3).'},
+o1:{n:'Overdrive',ic:'⏩',v:1,cost:6,hex:'#b6f23a',f:'o',h:1,d:'Adds 1 heat. The NEXT cell you burn this leg moves double, bonuses included. Wasted if it is your last cell.'},
+j1:{n:'Jammer',ic:'📡',v:1,cost:8,hex:'#d6d9ff',f:'j',d:'Races only: when burned, your top opponent gets a one-time Debris cell in their tank. A ship takes at most 1 per leg.'},
+x1:{n:'Debris',ic:'🪨',v:1,hex:'#8d8579',f:'x',h:1,d:'Heat 1. Jammed into your tank by a rival and gone after you burn it once.'}};
+const buyable=()=>Object.keys(C).filter(k=>C[k].cost&&(k!='j1'||!G||G.ps.length>1));
+const PIL={
+comet:{n:'Captain Comet',ic:'👨‍🚀',ship:'🚀',risk:.2,pas:'Steady Hands: your vent is ready at the start of every leg.',sig:'Once per game, after an overheat, keep your FULL thrust.'},
+nebula:{n:'Captain Nebula',ic:'🔮',ship:'🛸',lm:-1,risk:.28,pas:'Star Chart: you see the next cell in your tank before you burn it. Tight tolerances: heat limit 7, but you start with 7 credits.',sig:'Once per game, Reroute: swap the peeked cell for a new one.'},
+starlight:{n:'Starlight',ic:'🌟',ship:'🛰️',risk:.2,pas:'Sun Chaser: each Solar cell you burn charges double (max +3). Starts with a Solar cell.',sig:'Once per game, Hyperjump: your next leg starts 3 notches higher.'},
+rook:{n:'Rook',ic:'🕶️',ship:'☄️',risk:.3,pas:'Saboteur: each Jammer hits two rivals and pays you 1 credit per hit. Starts with 2 Jammers (in races; 4 credits when flying solo).',sig:'Once per game, Scatter: drop a Debris cell into every rival\'s tank.'}};
+const PK=Object.keys(PIL);
+const STAR=[{id:'comet',n:'The Comet',ic:'☄️',t:'Everyone starts this leg 1 notch higher.'},
+{id:'blackhole',n:'The Black Hole',ic:'🕳️',t:'The trailing ship takes no overheat penalty this leg.',ns:1},
+{id:'eclipse',n:'The Eclipse',ic:'🌑',t:'Solar cells charge +1 extra this leg.'},
+{id:'supernova',n:'The Supernova',ic:'💫',t:'Heat limit +1 for everyone this leg.'},
+{id:'meteor',n:'The Meteor Shower',ic:'🪨',t:'Every tank gets one Debris cell.'},
+{id:'lighthouse',n:'The Lighthouse',ic:'🗼',t:'Everyone sees the next cell in their tank this leg.'},
+{id:'merchant',n:'The Merchant',ic:'🛒',t:'One cell you buy at the next depot costs 3 less.'},
+{id:'twin',n:'The Twin Suns',ic:'🌗',t:'Ion chains count double this leg.'},
+{id:'void',n:'The Void',ic:'🌌',t:'Nobody earns the Slipstream bonus this leg.'},
+{id:'pstar',n:"The Pilot's Star",ic:'⭐',t:'The trailing ship starts 3 notches higher.',ns:1}];
+const hasPeek=p=>p.pilot=='nebula'||G.card=='lighthouse';
+const isLow=p=>{const t=G.ps.map(q=>q.total);return Math.min(...t)<Math.max(...t)&&p.total==Math.min(...t)};
+const price=(p,k)=>Math.max(1,C[k].cost-((G.card=='merchant'&&p.buys==0)?3:0));
+function drawCard(){if(G.every==2&&G.leg%2==0)return null;
+ if(!G.deck.length){G.deck=STAR.filter(c=>!(G.solo&&c.ns)).map(c=>c.id);for(let i=G.deck.length-1;i>0;i--){const j=rnd(i+1);[G.deck[i],G.deck[j]]=[G.deck[j],G.deck[i]]}}
+ return G.deck.shift()}
+const starCard=()=>{const c=STAR.find(x=>x.id==G.card);if(!c)return`<div class="card" style="padding:8px 12px"><b>🌠 Star card:</b> <span class="mut">none this leg</span></div>`;
+ return`<div class="card ${G.cardNew?'starnew':''}" style="padding:8px 12px"><b>${c.ic} ${c.n}</b> <span class="mut">· ${c.t}</span></div>`}
+const rnd=n=>Math.floor(Math.random()*n),$=id=>document.getElementById(id);
+let G=null,bestT=0,REF=false;try{bestT=+localStorage.getItem('redlineBest')||0}catch(e){}
+/* ---- audio + haptics ---- */
+let AC=null,NB=null,amb=null,SND=true,HAP=true,TM=0;
+try{SND=localStorage.getItem('rlSnd')!=='0';HAP=localStorage.getItem('rlHap')!=='0'}catch(e){}
+function ac(){if(!SND)return null;if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();const n=AC.sampleRate*2,b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;NB=b}catch(e){AC=null;return null}}if(AC.state=='suspended')AC.resume();return AC}
+function noise(dur,f0,f1,vol,type,q){const a=ac();if(!a)return;const t=a.currentTime,s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=NB;f.type=type||'bandpass';f.Q.value=q||1;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(f);f.connect(g);g.connect(a.destination);s.start(t);s.stop(t+dur+.05)}
+function tone(f0,f1,dur,vol,type){const a=ac();if(!a)return;const t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05)}
+const sfxDraw=r=>{noise(.2,500,1300,.25,'bandpass',2);setTimeout(()=>{tone(300+r*900,520+r*1500,.12,.15);noise(.25+.3*r,2000+3500*r,6000+3000*r,.08+.2*r,'highpass')},380)};
+const sfxBoom=()=>{noise(1.3,1600,60,.9,'lowpass',.7);tone(170,28,.9,.8,'sawtooth')};
+const sfxChime=()=>{tone(660,660,.15,.2,'triangle');setTimeout(()=>tone(990,990,.3,.2,'triangle'),130)};
+function fizz(r){if(!AC)return;if(!amb){const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=NB;s.loop=true;f.type='bandpass';f.Q.value=1.5;g.gain.value=0;s.connect(f);f.connect(g);g.connect(AC.destination);s.start();amb={f,g}}const t=AC.currentTime;if(!SND||r==null){amb.g.gain.setTargetAtTime(0,t,.1);return}amb.f.frequency.setTargetAtTime(700+3500*r,t,.2);amb.g.gain.setTargetAtTime(.01+.07*r*r,t,.2)}
 function buzz(r,boom){if(!HAP)return;try{navigator.vibrate(boom?[300,60,200,60,100,40,60]:r<.5?12:r<.7?[18,30,18]:r<.85?[28,35,28,35,28]:[45,30,45,30,70])}catch(e){}}
-function cue(me){const r=Math.min(1,wsum(me)/thr(me));if(me.boom){sfxBoom();buzz(1,true)}else{sfxDraw(r);buzz(r)}}
-function tgl(k){if(k=='s'){SND=!SND;try{localStorage.setItem('qSnd',SND?1:0)}catch(e){}if(SND)sfxChime()}else{HAP=!HAP;try{localStorage.setItem('qHap',HAP?1:0)}catch(e){}if(HAP)buzz(.6)}render()}
-const togs=()=>`<button class="alt" onclick="REF=true;render()" title="Rules">📖</button><button class="alt" onclick="tgl('s')" title="Sound">${SND?'🔊':'🔇'}</button><button class="alt" onclick="tgl('h')" title="Vibration">${HAP?'📳':'📴'}</button>`;
-const dsum=p=>p.drop+(p.dm||0)+(p.tt||0);
-const TUBE=[{t:'ruby'},{t:'vp',n:1},{t:'chip',c:['b',1]},{t:'vp',n:2},{t:'chip',c:['k',1]},{t:'vp',n:2},{t:'chip',c:['r',2]},{t:'vp',n:3},{t:'chip',c:['p',1]},{t:'vp',n:3},{t:'chip',c:['y',4]},{t:'vp',n:4}];
-const tubeTxt=b=>b.t=='ruby'?'1 ruby':b.t=='vp'?b.n+' VP':nm(ck(b.c[0],b.c[1]))+' chip into your bag';
-const tubeIcon=b=>b.t=='ruby'?'💎':b.t=='vp'?b.n+'⭐':chip(ck(b.c[0],b.c[1]),'mini');
-function tubeStep(p){const b=TUBE[p.tt||0];p.tt=(p.tt||0)+1;
- if(b.t=='ruby')p.rub++;else if(b.t=='vp')p.vp+=b.n;else p.bag.push(ck(b.c[0],b.c[1]));
- if(!p.ai)G.tmsg='🧪 Test tube reward: '+tubeTxt(b)}
-function mvD(p,n){for(let i=0;i<n;i++){
- if(!G.tt||(p.tt||0)>=TUBE.length)p.drop++;
- else if(p.ai){rng()<.6?tubeStep(p):p.drop++}
- else p.dm=(p.dm||0)+1}}
-const humans=()=>NET.role=='phone'?[G.ps[NET.seat]]:G.alive.filter(p=>!p.ai);
-const idle=p=>['wait','ready'].includes(p.ph);
-function viewer(){const H=humans();if(H.length<2)return H[0]||G.ps[0];
- if(G.v&&H.includes(G.v)&&!idle(G.v))return G.v;
- return H.find(p=>!idle(p))||(H.includes(G.v)?G.v:H[0])}
-function chkDm(p){if(!p||p.ai)return;if(G.stage=='over')p.dm=0;
- if(p.dm>0&&['draw','shop'].includes(p.ph)&&(!p.sum||p.seen)){p.after=p.ph;p.ph='dmove'}}
-const tubeRow=p=>`<div style="margin-top:6px"><div class="mut">🧪 Test tube (${p.tt||0}/12)</div><div class="tube">${TUBE.map((b,j)=>`<div class="glass ${j<(p.tt||0)?'done':j==(p.tt||0)?'next':''}">${tubeIcon(b)}</div>`).join('')}</div></div>`;
-function vsBar(){const a=G.ps[0],b=G.ps[1],d=a.vp-b.vp;
- return`<div class="card" style="position:sticky;top:0;z-index:5"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;text-align:center"><div><div class="mut">You</div><div class="big">${a.vp} VP</div></div><div><div class="big" style="color:${d>0?'var(--ok)':d<0?'var(--bad)':'inherit'}">${d>0?'▲ +'+d:d<0?'▼ '+d:'Tied'}</div><div class="mut">⚔️ lead</div></div><div><div class="mut">${b.name.split(' ')[0]}</div><div class="big">${b.vp} VP</div></div></div>
- <div class="mut" style="text-align:center">Rival: 🪙${b.coins} · 💎${b.rub} · droplet +${b.drop}${G.tt?' · tube '+(b.tt||0)+'/12':''} · rat stone +${b.rats}</div></div>`}
-const live=()=>['survival','campaign','party'].includes(G.mode);
-const STAGES=[
-{name:'Hazel the Cautious',icon:'🧙‍♀️',risk:.05,bp:.2,cb:0,q:'',sets:{g:1,b:1,r:1,y:1,p:1},desc:'Brews very cautiously and shops rarely. A gentle warm-up with Set 1.',taunt:'Slow and steady, dear. I never rush a brew.',onWin:'Oh my, what a steady hand you have.',onLose:'Patience always wins, dear.',goals:[{t:'Win by 10+ VP',f:s=>s.diff>=10},{t:'Explode at most twice',f:s=>s.boom<=2}]},
-{name:'Bram the Gambler',icon:'🎲',risk:.45,bp:.5,cb:0,q:'',sets:{g:2,b:2,r:2,y:2,p:2},desc:'Pushes his luck: huge scores or big booms. Set 2.',taunt:'Fortune favors the bold! Or the foolish. Let us find out which.',onWin:'Bah! One more draw and I would have had you.',onLose:'Ha! Nothing beats a good gamble.',goals:[{t:'Win by 8+ VP',f:s=>s.diff>=8},{t:'Use your flask at most twice',f:s=>s.flask<=2}]},
-{name:'Fiona the Flask-Fiend',icon:'🧴',risk:.22,bp:.35,cb:0,q:'flask',sets:{g:3,b:3,r:3,y:3,p:3},desc:'Her flask refills for free every round. Set 3.',taunt:'My flask never runs dry. Can you say the same?',onWin:'Hmph. I must have spilled a drop.',onLose:'Always one more chip to put back, darling.',goals:[{t:'Explode at most once',f:s=>s.boom<=1},{t:'Buy 3+ green chips',f:s=>(s.col.g||0)>=3}]},
-{name:'Quill the Ruby Hoarder',icon:'💎',risk:.2,bp:.25,cb:0,q:'ruby',sets:{g:4,b:4,r:4,y:4,p:4},desc:'Gains a ruby every round, so her droplet races ahead. Set 4.',taunt:'Rubies are just patience in crystal form.',onWin:'Impossible! I counted every ruby.',onLose:'Shiny things do add up.',goals:[{t:'Win by 8+ VP',f:s=>s.diff>=8},{t:'Explode at most twice',f:s=>s.boom<=2}]},
-{name:'Morgana Black-Widow',icon:'🕷️',risk:.25,bp:.4,cb:0,q:'black',sets:{g:3,b:1,r:4,y:2,p:3},desc:'Starts with 2 black chips and buys more. Fight her for the black bonuses.',taunt:'Every black chip is a little bite. Care to count them?',onWin:'You outwitted my web. Well played.',onLose:'Caught in my web again.',goals:[{t:'Buy 2+ black chips',f:s=>(s.col.k||0)>=2},{t:'Win by 6+ VP',f:s=>s.diff>=6}]},
-{name:'The Grand Quack',icon:'🦆',risk:.22,bp:.3,bc:1,cb:0,q:'boss',sets:{g:4,b:2,r:3,y:4,p:2},desc:'Boss: a bonus coin, a ruby and a free flask every round.',taunt:'Behold, the greatest quack in all of Quedlinburg!',onWin:'Quack?! No... the crown is yours.',onLose:'Quack quack! Better luck next fair.',goals:[{t:'Win by 5+ VP',f:s=>s.diff>=5},{t:'Explode at most twice',f:s=>s.boom<=2}]}];
-let camp={unlocked:0,wins:{},stars:{},diff:1};try{camp=JSON.parse(localStorage.getItem('quacksCamp'))||camp}catch(e){}
-camp.stars=camp.stars||{};if(camp.diff==null)camp.diff=1;
-const saveCamp=()=>{try{localStorage.setItem('quacksCamp',JSON.stringify(camp))}catch(e){}};
-function campEnd(){const me=G.ps[0],rv=G.ps[1];G.won=me.vp>rv.vp||(me.vp==rv.vp&&me.coins>rv.coins);
- const s={...me.stat,diff:me.vp-rv.vp,vp:me.vp};
- G.earned=[G.won,...G.st.goals.map(g=>G.won&&g.f(s))];
- if(G.won){camp.wins[G.si]=Math.max(camp.wins[G.si]||0,me.vp);camp.unlocked=Math.max(camp.unlocked,G.si+1)}
- const o=camp.stars[G.si]||[false,false,false];camp.stars[G.si]=o.map((x,i)=>x||!!G.earned[i]);saveCamp()}
-function campOver(){const me=G.ps[0],rv=G.ps[1],st=G.st,nx=G.si+1<STAGES.length;
- return`<div class="card" style="text-align:center"><div style="font-size:44px">${st.icon}</div><div class="big">${G.won?'🏆 Victory!':'💀 Defeat'}</div><div>You ${me.vp} VP vs ${rv.name} ${rv.vp} VP</div><div class="mut">“${G.won?st.onWin:st.onLose}”</div>
- <div style="margin-top:8px;text-align:left"><div>${G.earned[0]?'⭐':'☆'} Win the duel</div>${st.goals.map((g,i)=>`<div>${G.earned[i+1]?'⭐':'☆'} ${g.t}</div>`).join('')}</div>
- <div class="mut" style="margin-top:6px">${G.won?(nx?'Next stage unlocked.':'Campaign complete!'):'Try a different buying plan and challenge them again.'}</div></div>`
- +(G.won&&nx?`<button class="go" onclick="newGame('campaign',${G.si+1})">Next stage</button>`:'')+`<button onclick="newGame('campaign',${G.si})">${G.won?'Replay':'Retry'}</button><button class="alt" onclick="act('menu')">Campaign map</button>`}
-function stageList(){return`<div class="row" style="margin:4px 0">Difficulty: ${['Easy','Normal','Hard'].map((n,i)=>`<button class="${camp.diff==i?'':'alt'}" onclick="camp.diff=${i};saveCamp();render()">${n}</button>`).join('')}</div>`+
- STAGES.map((t,i)=>{const sr=camp.stars[i]||[];return`<div class="row" style="margin:8px 0;flex-wrap:nowrap"><span style="font-size:28px">${t.icon}</span><div style="flex:1;min-width:0"><b>${i+1}. ${t.name}</b> ${[0,1,2].map(k=>sr[k]?'⭐':'☆').join('')}<div class="mut">${t.desc}</div><div class="mut">☆ Win · ☆ ${t.goals.map(g=>g.t).join(' · ☆ ')}</div></div><button onclick="newGame('campaign',${i})" ${i<=camp.unlocked?'':'disabled'}>${i<=camp.unlocked?'Play':'🔒'}</button></div>`}).join('')}
-function introHTML(){const t=G.st;return`<div class="modal"><div class="card" style="text-align:center"><div style="font-size:56px">${t.icon}</div><div class="big">${t.name}</div><div class="mut">Stage ${G.si+1} · ${['Easy','Normal','Hard'][camp.diff]}</div><p>“${t.taunt}”</p><div class="mut">${t.desc}</div><div class="mut" style="margin-top:6px">⭐ Win · ⭐ ${t.goals.map(g=>g.t).join(' · ⭐ ')}</div><button class="go" onclick="act('begin')">Begin duel</button></div></div>`}
-function aiStep(p){
- if(p.done)return;
- const l=p.pot[p.pot.length-1];
+function tgl(k){if(k=='s'){SND=!SND;try{localStorage.setItem('rlSnd',SND?1:0)}catch(e){}if(SND)sfxChime()}else{HAP=!HAP;try{localStorage.setItem('rlHap',HAP?1:0)}catch(e){}if(HAP)buzz(.6)}render()}
+const togs=()=>`<button class="alt" onclick="REF=true;render()" title="Fuel guide">📖</button><button class="alt" onclick="tgl('s')">${SND?'🔊':'🔇'}</button><button class="alt" onclick="tgl('h')">${HAP?'📳':'📴'}</button>`;
+/* ---- rules engine ---- */
+const cnt=(p,f)=>p.pot.filter(e=>C[e.k].f==f).length;
+const hk=k=>C[k].f=='p'?C[k].v:(C[k].h||0);
+const heat=p=>p.pot.reduce((s,e)=>s+hk(e.k),0);
+const lim=p=>LIM+Math.floor(cnt(p,'c')/3)+(PIL[p.pilot].lm||0)+(G.card=='supernova'?1:0);
+const end=p=>p.pot.length?p.pot[p.pot.length-1].f:p.st;
+const odds=p=>p.bag.length?p.bag.filter(k=>hk(k)>0&&heat(p)+hk(k)>lim(p)).length/p.bag.length:0;
+const humans=()=>G.ps.filter(p=>!p.ai),idle=p=>['wait','ready','over'].includes(p.ph);
+function viewer(){const H=humans();if(H.length<2)return H[0];if(G.v&&!idle(G.v))return G.v;return H.find(p=>!idle(p))||G.v||H[0]}
+const mk=(name,ai,pk,solo)=>{const P=PIL[pk],bag=['p1','p1','p1','p2','p2','p3','s1','s1','c1'];
+ if(pk=='starlight')bag[6]='g1';if(pk=='rook'&&!solo){bag[6]='j1';bag[7]='j1'}
+ return{name,ai,pilot:pk,risk:ai?P.risk:0,ship:P.ship,bag,pot:[],st:0,power:0,charge:0,sol:0,vent:true,coins:pk=='nebula'?7:pk=='comet'?4:(pk=='rook'&&solo)?4:0,total:0,boom:false,done:false,ph:'draw',seen:true,sum:null,buys:0,gap:0,last:'',bp:60,sig:true,hj:0,keep:false,nx:null,notes:[]}};
+const nx=p=>{if(!p.bag.length)return 0;if(p.nx==null||p.nx>=p.bag.length)p.nx=rnd(p.bag.length);return p.nx};
+function scatter(p){if(!p.sig||p.pilot!='rook'||G.ps.length<2)return;p.sig=false;G.ps.filter(q=>q!==p).forEach(q=>{q.bag.push('x1');q.notes.push(['🕶️',p.name+' scattered Debris into your tank.'])})}
+function place(p,k){const c=C[k];let mv=c.v;
+ if(c.f=='i'){const n=cnt(p,'i');mv+=G.card=='twin'?Math.min(5,n*2):Math.min(3,n)}
+ if(c.f=='a')mv+=Math.floor(heat(p)/2);
+ if(c.f=='k')mv+=Math.min(3,Math.floor(p.gap/8));
+ if(p.od){mv*=2;p.od=false}
+ p.pot.push({k,f:Math.min(GN-1,end(p)+mv)});
+ if(c.f=='o')p.od=true;
+ if(c.f=='g')p.sol++;
+ if(heat(p)>lim(p))p.boom=true}
+function drawOne(p){if(!p.bag.length)return;const i=hasPeek(p)?nx(p):rnd(p.bag.length);p.nx=null;place(p,p.bag.splice(i,1)[0])}
+function ventUse(p){const l=p.pot[p.pot.length-1];if(!p.vent||!l||C[l.k].f!='p'||p.boom)return;p.pot.pop();p.bag.push(l.k);p.vent=false}
+function aiStep(p){if(p.done)return;
  if(p.boom||!p.bag.length){p.done=true;return}
- if(p.flask&&l&&CH[l.k].w&&wsum(p)>=thr(p)-1){flask(p);return}
- if(odds(p)>p.risk){p.done=true;return}
- drawOne(p);
-}
-function aiPanel(){return G.alive.filter(p=>p.ai).map(p=>{const st=p.boom?'💥 exploded':p.done?'✋ stopped':'🎲 drawing…';
- return`<div style="margin:6px 0"><div class="row" style="justify-content:space-between"><b>${p.name}</b><span class="mut">${wsum(p)}/${thr(p)} · ${st}</span></div><div class="pot" style="min-height:26px;gap:3px">${p.pot.map(e=>chip(e.k,'mini')).join('')||'<span class="mut">empty</span>'}</div></div>`}).join('')}
-function tickOnce(){
- if(!G||G.intro||!live()||G.stage!='play')return;
- G.alive.filter(p=>p.ai).forEach(aiStep);
- tryFinish();
- if(G.stage!='play'){render();return}
- if(NET.role=='host'){renderHost();bcSoon();return}
- const e=$('aip');if(e)e.innerHTML=aiPanel();
-}
+ const l=p.pot[p.pot.length-1];
+ if(p.vent&&l&&C[l.k].f=='p'&&heat(p)>=lim(p)-1){ventUse(p);return}
+ if(hasPeek(p)){const k=p.bag[nx(p)];if(hk(k)>0&&heat(p)+hk(k)>lim(p)){if(p.pilot=='nebula'&&p.sig){p.sig=false;p.nx=null;return}p.done=true;return}}
+ else if(odds(p)>p.risk){p.done=true;return}
+ drawOne(p)}
+function aiShop(p){let n=0;
+ buyable().sort((a,b)=>C[b].cost-C[a].cost).forEach(k=>{const pc=Math.max(1,C[k].cost-((G.card=='merchant'&&n==0)?3:0));if(n<2&&p.coins>=pc&&rnd(100)<p.bp){p.coins-=pc;p.bag.push(k);n++}});
+ if(p.power<4&&p.coins>=PWR[p.power]&&rnd(100)<50){p.coins-=PWR[p.power];p.power++}
+ if(!p.vent&&p.coins>=VENT){p.coins-=VENT;p.vent=true}
+ if(p.pilot=='starlight'&&p.sig&&p.total>=18&&rnd(100)<50){p.sig=false;p.hj=3}
+ if(p.pilot=='rook'&&p.sig&&G.leg>=3&&rnd(100)<40)scatter(p)}
+function startLeg(){G.stage='play';G.card=drawCard();G.cardNew=true;const lead=Math.max(...G.ps.map(p=>p.total));
+ G.ps.forEach(p=>{p.gap=lead-p.total;const xb=(G.card=='comet'?1:0)+(G.card=='pstar'&&isLow(p)?3:0);p.st=Math.min(GN-1,p.power+p.charge+p.hj+xb);p.c0=p.charge+p.hj+xb;p.bh=G.card=='blackhole'&&isLow(p);if(G.card=='meteor')p.bag.push('x1');p.charge=0;p.hj=0;p.nx=null;p.keep=false;if(p.pilot=='comet')p.vent=true;p.sol=0;p.done=false;p.boom=false;p.od=false;p.pot=[];p.buys=0;if(!p.ai)p.ph='draw'});
+ clearTimeout(TM);if(G.ps.some(p=>p.ai))TM=setTimeout(tick,900)}
+function tryFinish(){if(G.stage=='play'&&G.ps.every(p=>p.ai?p.done:p.ph=='wait'))finish()}
+function tickOnce(){if(!G||G.stage!='play')return;G.ps.filter(p=>p.ai).forEach(aiStep);tryFinish();if(G.stage!='play'){render();return}const e=$('aip');if(e)e.innerHTML=aiPanel()}
 function tick(){if(!G||G.stage!='play')return;tickOnce();TM=setTimeout(tick,650+rnd(500))}
-function tryFinish(){if(G.stage=='play'&&G.alive.every(p=>p.ai?p.done:p.ph=='wait'))finish()}
-function rollDie(p){const f=['vp1','vp2','ruby','drop','orange','ruby'][rnd(6)];
- if(f=='vp1')p.vp++;if(f=='vp2')p.vp+=2;if(f=='ruby')p.rub++;if(f=='drop')mvD(p,1);if(f=='orange')p.bag.push('o1');return f}
-function startRound(){
- const A=G.alive,c=G.card=G.deck.shift(),par=5*(G.round-1);G.stage='play';
- const last=p=>G.mode=='single'?p.vp<par:p.vp==Math.min(...A.map(q=>q.vp));
- A.forEach(p=>{p.looked=false;p.spent=0;p.done=false;if(p.cb)p.coins=Math.max(0,p.coins+p.cb);
-  if(p.q=='ruby')p.rub++;if(p.q=='flask')p.flask=true;if(p.q=='boss'){p.coins+=(p.bc==null?2:p.bc);p.rub++;p.flask=true}
-  if(c==1||(c==6&&last(p))||(c==8&&p.rats<=1))mvD(p,1);
-  if(c==2||(c==7&&last(p)))p.rub++;
-  if(c==3)rollDie(p);
-  if(c==4)p.vp++;
-  if(c==9)p.rats++;
-  if(c==12)p.vp+=p.rats;
-  if(p.ai){if(c==5)rng()<.5?mvD(p,1):p.rub++;if(c==10&&p.rub>=2){p.rub-=2;mvD(p,1)}if(c==11&&p.rub>=2&&G.round>=6){p.rub-=2;p.vp++}}
- });
- A.filter(p=>!p.ai).forEach(p=>{p.ph=[5,10,11].includes(c)?'card':'draw';p.buys=0;p.cols=[]});
- A.forEach(chkDm);
- clearTimeout(TM);if(live())TM=setTimeout(tick,900);
-}
-let rng=Math.random;
-function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-const dnow=new Date(),dayKey=dnow.getFullYear()+'-'+(dnow.getMonth()+1)+'-'+dnow.getDate(),dSeed=[...dayKey].reduce((h,c)=>Math.imul(h^c.charCodeAt(0),16777619),2166136261);
-const dailySets=()=>{const q=mulberry(dSeed);return'gbryp'.split('').map(()=>1+Math.floor(q()*4))};
-let dBest=0;try{dBest=+localStorage.getItem('quacksD'+dayKey)||0}catch(e){}
-const rnd=n=>Math.floor(rng()*n),$=id=>document.getElementById(id);
-let G=null,best=0;try{best=+localStorage.getItem('quacksBest')||0}catch(e){}
-const ck=(c,v)=>(c=='o'||c=='k')?c+v:c+v+'_'+G.sets[c];
-const wsum=p=>p.pot.reduce((s,e)=>s+(CH[e.k].w||0),0);
-const nc=(p,c)=>p.pot.filter(e=>CH[e.k].col==c);
-const thr=p=>{const y=p.pot.filter(e=>CH[e.k].col=='y').length;return G.sets.y==3?(y>=3?9:y>=1?8:7):7};
-const start=p=>p.drop+p.rats,end=p=>p.pot.length?p.pot[p.pot.length-1].f:start(p),sc=p=>Math.min(53,end(p)+1);
-let lastSets={g:1,b:1,r:1,y:1,p:1};
-const mk=(name,ai,risk)=>({ph:'draw',buys:0,cols:[],stat:{boom:0,flask:0,col:{}},seen:true,sum:null,dq:[],uo:[],name,ai,risk,bag:['w1','w1','w1','w1','w2','w2','w3','o1',ck('g',1)],pot:[],drop:0,tt:0,dm:0,rats:0,flask:true,coins:0,rub:0,vp:0,last:'',pend:null,aside:[],safe:0,prot:false,dbl:false,boom:false});
-function newGame(mode,si,cfg){
- const daily=mode=='daily';if(daily){mode='single';rng=mulberry(dSeed)}else rng=Math.random;
- const st=mode=='campaign'?STAGES[si]:null;
- G={mode,daily,sets:{},tt:!daily&&useTT,intro:!!st};
- 'gbryp'.split('').forEach(x=>{G.sets[x]=daily?1+rnd(4):st?st.sets[x]:(()=>{const e=$('s_'+x);if(e)lastSets[x]=+e.value;return lastSets[x]})()});
- let ps;
- if(mode=='party'){cfg=cfg||readParty();G.cfg=cfg;ps=cfg.names.map(n=>mk(n,false,0));[['Hazel',.12],['Bram',.2],['Quill',.3]].slice(0,cfg.ai).forEach(a=>ps.push(mk(a[0],true,a[1])))}
- else{ps=[mk('You',false,0)];
-  if(st){const rv=mk(st.name,true,st.risk*[.8,1,1.2][camp.diff]);rv.q=st.q;rv.bp=Math.min(1,(st.bp==null?.6:st.bp)*[.6,1,1.4][camp.diff]);rv.bc=st.bc;rv.cb=(st.cb||0)+[-1,0,2][camp.diff];if(st.q=='black')rv.bag.push('k1','k1');ps.push(rv)}
-  if(mode=='survival')[['Hazel',.12],['Bram',.2],['Quill',.3]].forEach(a=>ps.push(mk(a[0],true,a[1])))}
- Object.assign(G,{st,si,ps,alive:ps.slice(),round:1,gameNo:1,stage:'play',bag:false,msg:''});deckInit();startRound();render();
-}
-function readParty(){const n=+$('np').value||2,names=[];for(let i=1;i<=n;i++){const e=$('pn'+i);names.push(((e&&e.value)||'Player '+i).replace(/[<>&"]/g,'').slice(0,14)||'Player '+i)}
- return{names,ai:+($('pai')&&$('pai').value)||0}}
-function partyOver(){const s=[...G.alive].sort((a,b)=>b.vp-a.vp||b.coins-a.coins),w=s[0];
- return`<div class="card" style="text-align:center"><div style="font-size:44px">🏆</div><div class="big">${w.name} wins!</div><div class="mut">${s.map(q=>q.name+' '+q.vp).join(' · ')}</div></div>${NET.role=='phone'?'<div class="mut" style="margin:8px 0">Waiting for the host to start a rematch…</div><button class="alt" onclick="act(\'menu\')">Leave room</button>':'<button onclick="act(\'again\')">Play again</button><button class="alt" onclick="act(\'menu\')">'+(NET.role=='host'?'Close room':'Menu')+'</button>'}`}
-const odds=p=>p.bag.length?p.bag.filter(k=>CH[k].w&&wsum(p)+CH[k].w>thr(p)).length/p.bag.length:0;
-function place(p,k){
- const c=CH[k],pot=p.pot,e0=end(p),v=c.ver,n=x=>nc(p,x).length;let mv=c.v;
- const win=p.safe>0;if(win)p.safe--;
- if(k=='w3'&&G.card==17)p.rub++;
- if(c.col=='r'){
-  if(v==2){p.aside.push(k);return}
-  if(v==1){const o=n('o');mv+=o>=3?2:o>=1?1:0}
-  if(v==3){const l=pot[pot.length-1];if(l&&CH[l.k].w)mv+=CH[l.k].w}
- }
- if(c.col=='w'&&c.w==1&&G.sets.r==4&&n('r'))mv=2;
- if(c.col=='y'&&v==4){const q=n('y')+1;mv+=q<=3?q:0}
- if(p.dbl){mv*=2;p.dbl=false}
- const f=Math.min(53,e0+mv);
- if(c.col=='y'&&v==1){const l=pot[pot.length-1];if(l&&CH[l.k].w){pot.pop();p.bag.push(l.k)}}
- pot.push({k,f});
- if(c.col=='b'&&v==3&&RUBYF.includes(f))p.rub++;
- if(c.col=='b'&&v==4&&RUBYF.includes(f))p.vp+=c.v;
- if(c.col=='y'&&v==2)p.dbl=true;
- if(wsum(p)>thr(p)){p.boom=true;if(win)p.prot=true;return}
- if(c.col=='b'&&v==2)p.safe=Math.max(p.safe,c.v);
- if(c.col=='b'&&v==1&&p.bag.length){
-  p.pend=[];for(let i=0;i<Math.min(c.v,p.bag.length);i++)p.pend.push(p.bag.splice(rnd(p.bag.length),1)[0]);
-  if(p.ai)autoPick(p);
- }
-}
-function drawOne(p){if(!p.bag.length)return;const k=p.bag.splice(rnd(p.bag.length),1)[0];
- if(G.card==23&&!p.looked){p.looked=true;p.pend=[k];if(p.ai)autoPick(p);return}place(p,k)}
-function pick(p,i){const k=i>=0?p.pend.splice(i,1)[0]:null;p.bag.push(...p.pend);p.pend=null;if(k)place(p,k)}
-function autoPick(p){
- const s=k=>CH[k].w&&wsum(p)+CH[k].w>thr(p)?-99:CH[k].v+(CH[k].col!='w'?.5:0);
- let b=0;p.pend.forEach((k,i)=>{if(s(k)>s(p.pend[b]))b=i});pick(p,s(p.pend[b])<0?-1:b);
-}
-function flask(p){const e=p.pot.pop();p.bag.push(e.k);p.flask=false;if(G.card==21)p.rub++}
-function aiDraw(p){
- while(p.bag.length&&!p.boom){
-  const l=p.pot[p.pot.length-1];
-  if(p.flask&&l&&CH[l.k].w&&wsum(p)>=thr(p)-1)flask(p);
-  if(odds(p)>p.risk)break;drawOne(p);
- }
-}
-function settle(p){p.aside.splice(0).forEach(k=>p.pot.push({k,f:Math.min(53,end(p)+CH[k].v)}))}
-function upgKey(p,k,to){const e=p.pot.find(e=>e.k==k),c=CH[k];if(e)e.k=c.col=='w'?'w'+to:c.col+to+'_'+c.ver}
-function upgOpts(p){const q=nc(p,'p').length,o=[],seen={};
- p.pot.forEach(e=>{const c=CH[e.k];if(!'gbry'.includes(c.col)||seen[e.k])return;seen[e.k]=1;
-  if(q>=1&&c.v==1)o.push({k:e.k,to:2});
-  if(c.col!='w'&&((q>=2&&c.v==2)||(q>=3&&c.v==1)))o.push({k:e.k,to:4})});return o}
-function endRound(p,choice){
- settle(p);p.choice=choice;p.dec={};p.uo=upgOpts(p);
- const l2=p.pot.slice(-2).filter(e=>CH[e.k].col=='g').length;
- p.dq=[];if(G.sets.g==4&&l2&&p.rub>0)p.dq.push('g');if(G.sets.p==4&&p.uo.length)p.dq.push('u');
- p.ph=p.dq.length?'dec':'wait';tryFinish()}
-function upg(p,from,to){
- const e=p.pot.find(e=>'gbry'.includes(CH[e.k].col)&&CH[e.k].v==from);
- if(e){const c=CH[e.k];e.k=c.col+to+'_'+c.ver}
-}
-function B(p,o){
- const pot=p.pot,n=pot.length,lastTwo=pot.slice(-2).filter(e=>CH[e.k].col=='g'),g=G.sets;
- const kn=nc(p,'k').length;mark(p);
- if(kn){
-  if(o.o!==undefined){if(kn>o.o){mvD(p,1);p.rub++}else if(kn==o.o)mvD(p,1)}
-  else if(kn>o.l&&kn>o.r){mvD(p,1);p.rub++}else if(kn>o.l||kn>o.r)mvD(p,1);
- }
- mark(p,'⚫','Black chips');
- if(g.g==1)p.rub+=lastTwo.length;
- if(g.g==2)lastTwo.forEach(e=>{const v=CH[e.k].v;p.bag.push(v==1?'o1':v==2?ck('b',1):ck('y',1))});
- if(g.g==3&&n){const s=nc(p,'g').reduce((a,e)=>a+CH[e.k].v,0)*(wsum(p)==7?2:1);pot[n-1].f=Math.min(53,pot[n-1].f+s)}
- if(g.g==4){const m=Math.min(lastTwo.length,p.rub,p.ai?9:(p.dec&&p.dec.g)||0);p.rub-=m;mvD(p,m)}
- mark(p,'🟢','Green chips');
- const pn=nc(p,'p'),q=pn.length;
- if(g.p==1){if(q==1)p.vp++;else if(q==2){p.vp++;p.rub++}else if(q>=3){p.vp+=2;mvD(p,1)}}
- if(g.p==2&&q){const L=Math.min(q,3);
-  if(L==1){p.bag.push('k1');p.vp++;p.rub++}
-  if(L==2){p.bag.push(ck('g',1),ck('b',2));p.vp+=3;mvD(p,1)}
-  if(L==3){p.bag.push(ck('y',4));p.vp+=6;p.rub++;mvD(p,2)}
-  for(let i=0;i<L;i++)pot.splice(pot.indexOf(pn[i]),1);}
- if(g.p==3)pn.forEach(e=>p.vp+=e.f>=30?3:e.f>=20?2:e.f>=10?1:0);
- if(g.p==4){if(p.ai){if(q==1)upg(p,1,2);else if(q==2)upg(p,2,4);else if(q>=3)upg(p,1,4)}else if(p.dec&&p.dec.u)upgKey(p,p.dec.u.k,p.dec.u.to)}
- mark(p,'🟣','Purple chips');
-}
-function aiShop(p){
- const cols=[];let n=0;
- Object.keys(CH).filter(k=>avail(CH[k])).sort((a,b)=>(p.q=='black'?(CH[b].col=='k')-(CH[a].col=='k'):0)||CH[b].cost-CH[a].cost).forEach(k=>{
-  const c=CH[k],pr=Math.max(0,c.cost-(G.card==19&&!n?1:0));if(n<2&&(!cols.includes(c.col)||G.card==16)&&p.coins>=pr&&rng()<(c.col=='k'?(p.q=='black'?1:.2):(p.bp==null?.6:p.bp))){p.coins-=pr;p.bag.push(k);cols.push(c.col);n++;p.spent=Math.max(p.spent,c.cost)}});
- if(G.card==24&&G.round>=5){p.vp+=p.rub;p.rub=0}
- if(!p.flask&&p.rub>=fc()){p.flask=true;p.rub-=fc()}
- while(p.rub>=dc()){mvD(p,1);p.rub-=dc()}
- p.coins=0;
-}
-function avail(c){return c.cost&&(!c.ver||G.sets[c.col]==c.ver)&&!(c.col=='y'&&G.round<2)&&!(c.col=='p'&&G.round<3)}
 function finish(){
- const A=G.alive,fin=G.round==ROUNDS,Hs=A.filter(p=>!p.ai);
- A.forEach(p=>{p.b0=[p.vp,p.coins,p.rub,dsum(p)]});
- A.filter(p=>p.ai&&!p.done).forEach(aiDraw);A.forEach(settle);
- const bk=p=>nc(p,'k').length,N=A.length;
- const opp=A.map((p,i)=>G.mode=='single'?{o:G.round<3?0:rnd(3)}:N==2?{o:bk(A[1-i])}:{l:bk(A[(i+N-1)%N]),r:bk(A[(i+1)%N])});
- const ok=A.filter(p=>!p.boom),mx=Math.max(...ok.map(sc)),roll=G.mode=='single'?ok:ok.filter(p=>sc(p)==mx);
- A.forEach((p,i)=>{
-  let t='';const H=!p.ai;p._m=null;if(H&&p.boom)p.stat.boom++;
-  p.rc={pot:p.pot.map(e=>e.k),boom:p.boom&&!p.prot,die:null};
-  if(H)p.sum={pot:p.pot.map(e=>({k:e.k})),boom:p.boom,prot:p.prot,lines:[],round:G.round};
-  if(roll.includes(p)){const f=rollDie(p);p.rc.die=f;t='🎲'+f+' ';if(H){p.sum.die=f;p.sum.dieDone=false}if(H)p.sum.lines.push({i:'🎲',t:'Bonus die: '+DIE[f],chips:f=='orange'?['o1']:[]})}else if(H)p.sum.lines.push({i:'🎲',t:p.boom?'No bonus die (you exploded)':'No bonus die (not the furthest)'});
-  B(p,opp[i]);
-  const s=sc(p),rr=RUBYF.includes(s)?(G.card==18?2:1):0;p.rub+=rr;
-  if(H&&rr)p.sum.lines.push({i:'◆',t:'Ended on ruby field '+s+': +'+rr+' 💎'+(G.card==18?' (Fortune 18 doubled it)':'')});
-  if(G.card==14&&!p.boom){p.rub++;if(H)p.sum.lines.push({i:'🔵',t:'Fortune 14: no explosion, +1 💎'})}
-  const ex=p.boom&&!p.prot&&G.card!=13,ch=ex?(p.ai?(G.round<5||p.coins<8?'coins':'vp'):p.choice):'both';
-  if(ch!='vp'){p.coins+=TC[s]}if(ch!='coins'){p.vp+=TV[s]}
-  if(H)p.sum.lines.push({i:ex?'💥':'🏁',t:'Scoring field '+s+': '+(ch=='vp'?TV[s]+' VP':ch=='coins'?TC[s]+' coins':TV[s]+' VP + '+TC[s]+' coins')+(ex?' (exploded: your pick)':G.card==13&&p.boom?' (Fortune 13: both!)':'')});
-  p.last=t+(ex?'💥 ':'')+(ch=='vp'?TV[s]+'VP':ch=='coins'?TC[s]+'c':TV[s]+'VP '+TC[s]+'c');
-  p.bag.push(...p.pot.map(e=>e.k));Object.assign(p,{pot:[],boom:false,prot:false,safe:0,dbl:false,pend:null});
+ const A=G.ps,solo=A.length==1;A.filter(p=>p.ai&&!p.done).forEach(p=>{while(!p.done)aiStep(p)});
+ const jm=new Map(),hit=new Set(),debris=[],addJ=(q,m)=>{if(!jm.has(q))jm.set(q,[]);jm.get(q).push(m)};
+ if(!solo)A.forEach(p=>{const nj=cnt(p,'j')*(p.pilot=='rook'?2:1);if(!nj)return;const opp=A.filter(q=>q!==p).sort((a,b)=>b.total-a.total);
+  for(let i=0;i<nj;i++){const q=opp.find(x=>!hit.has(x));if(!q)break;hit.add(q);debris.push(q);if(p.pilot=='rook')p.coins+=1;addJ(p,['📡','Your jammer hit '+q.name+'.']);addJ(q,['📡',p.name+' jammed your engines: a Debris cell joins your tank.'])}});
+ const ok=A.filter(p=>!p.boom),best=ok.length?Math.max(...ok.map(end)):-1;
+ A.forEach(p=>{
+  const pos=end(p),L=[];let th=thrust(pos),cr=cred(pos);
+  if(p.ai&&p.boom&&p.pilot=='comet'&&p.sig){p.sig=false;p.keep=true}
+  if(p.boom&&p.keep)L.push(['👨‍🚀','OVERHEAT! Steady Hands keeps your full thrust.']);
+  else if(p.boom&&p.bh)L.push(['🕳️','OVERHEAT! The Black Hole swallows the penalty: full thrust kept.']);
+  else if(p.boom){th=Math.floor(th/2);L.push(['💥','OVERHEAT! The engine coasts at half thrust.'])}else L.push(['🔥','Clean burn: gauge notch '+pos+'.']);
+  const cc=cnt(p,'c');if(cc){cr+=cc;L.push(['❄️','Coolant paid '+cc+' credit'+(cc>1?'s':'')+(cc>=3?' and raised your heat limit':'')+'.'])}
+  if(G.card=='void'&&!p.boom&&(solo||pos==best))L.push(['🌌','The Void: the Slipstream bonus vanished.']);
+  else if(!p.boom&&(solo||pos==best)){const b=solo?1:2;th+=b;L.push(['🌠','Slipstream bonus: +'+b+' thrust.'])}
+  p.total+=th;p.coins+=cr;{const sm=(p.pilot=='starlight'?2:1)+(G.card=='eclipse'?1:0);p.charge=Math.min(G.card=='eclipse'?4:3,p.sol*sm)}
+  if(p.charge)L.push(['☀️','Solar charge: next leg starts '+p.charge+' notch'+(p.charge>1?'es':'')+' higher.']);
+  (jm.get(p)||[]).forEach(m=>L.push(m));
+  p.notes.splice(0).forEach(m=>L.push(m));
+  L.push(['⚡','Thrust +'+th+', credits +'+cr+'.']);
+  p.last=(p.boom?'💥 ':'')+'+'+th+'⚡';
+  if(!p.ai)p.sum={pot:p.pot.map(e=>e.k),boom:p.boom,L,d:[th,cr,p.total,p.charge],leg:G.leg};
+  p.bag.push(...p.pot.map(e=>e.k).filter(k=>k!='x1'));p.pot=[];
  });
- A.forEach(p=>{p.rc.dv=p.vp-p.b0[0];p.rc.dc=p.coins-p.b0[1]});
- Hs.forEach(p=>{p.sum.d=[p.vp-p.b0[0],p.coins-p.b0[1],p.rub-p.b0[2],dsum(p)-p.b0[3]];p.sum.others=A.filter(q=>q!==p).map(q=>[q.name,q.last]);p.seen=false});
- if(fin){A.forEach(p=>{p.bonus=Math.floor(p.coins/5)+(G.card==24?p.rub:Math.floor(p.rub/2));p.vp+=p.bonus});
-  Hs.forEach(p=>{p.sum.d[0]+=p.bonus;p.sum.lines.push({i:'🏆',t:'Final conversion: +'+p.bonus+' VP from leftover coins and rubies'});p.dm=0;p.ph='over'});
-  const me=G.ps[0];if(G.daily){if(me.vp>dBest){dBest=me.vp;try{localStorage.setItem('quacksD'+dayKey,dBest)}catch(e){}}}else if(G.mode=='single'&&me.vp>best){best=me.vp;try{localStorage.setItem('quacksBest',best)}catch(e){}}if(G.mode=='campaign')campEnd();G.stage='over';return}
- A.filter(p=>p.ai).forEach(aiShop);G.stage='shop';Hs.forEach(p=>{p.ph='shop';p.buys=0;p.cols=[]});
-}
-function nextRound(){
- const A=G.alive;
- if(G.card==22){const mx=Math.max(...A.map(p=>p.spent));
-  if(G.mode=='single'){if(G.ps[0].spent>=10)G.ps[0].vp++}else if(mx>0)A.filter(p=>p.spent==mx).forEach(p=>p.vp++)}
- G.round++;if(G.round==6)A.forEach(p=>p.bag.push('w1'));
- const m=G.mode=='single'?5*(G.round-1):Math.max(...A.map(p=>p.vp));
- A.forEach(p=>p.rats=G.mode=='single'?0:Math.max(0,Math.min(5,Math.floor((m-p.vp)/3))));startRound()}
-function after(p){if(p.pend)p.ph='pick';else if(p.boom){if(p.prot)endRound(p);else p.ph='boom'}else p.ph='draw'}
-function actE(a,x,pl){
- if(a=='menu'){G=null;clearTimeout(TM);fizz(null);render();return}
- const me=pl||viewer();G.fresh=false;G.tmsg='';
- if(a=='draw'){drawOne(me);G.fresh=true;cue(me);after(me)}
- if(a=='pick'){pick(me,x);G.fresh=x>=0;if(x>=0)cue(me);after(me)}
- if(a=='flask'){flask(me);me.stat.flask++}
- if(a=='begin')G.intro=false;
- if(a=='unlock')G.pass=false;
- if(a=='stop'){sfxChime();buzz(.3);endRound(me)}
- if(a=='choose')endRound(me,x);
- if(a=='dec'){const t=me.dq[0];me.dec[t]=t=='g'?x:(x>=0?me.uo[x]:null);me.dq.shift();if(!me.dq.length){me.ph='wait';tryFinish()}}
- if(a=='buy'){const c=CH[x],pr=price(c,me);if(me.buys<2&&(!me.cols.includes(c.col)||G.card==16)&&me.coins>=pr){me.coins-=pr;me.bag.push(x);me.buys++;me.cols.push(c.col);me.spent=Math.max(me.spent,c.cost);me.stat.col[c.col]=(me.stat.col[c.col]||0)+1}}
- if(a=='trade'&&me.rub>=1){me.rub--;me.vp++}
- if(a=='card'){const c=G.card;if(c==5)x=='drop'?mvD(me,1):me.rub++;else if(x=='use'&&me.rub>=2){me.rub-=2;c==10?mvD(me,1):me.vp++}me.ph='draw'}
- if(a=='fill'&&me.rub>=fc()&&!me.flask){me.rub-=fc();me.flask=true}
- if(a=='drop'&&me.rub>=dc()){me.rub-=dc();mvD(me,1)}
- if(a=='next'){me.coins=0;me.ph='ready';if(G.alive.every(q=>q.ai||q.ph=='ready'))nextRound()}
- if(a=='bag')G.bag=!G.bag;
- if(a=='seen')me.seen=true;
- if(a=='again')newGame(G.daily?'daily':G.mode,G.si,G.cfg);
- if(a=='share'){const t='Quacks Daily '+dayKey+': '+me.vp+' VP (sets '+dailySets().join('')+')';try{navigator.clipboard.writeText(t)}catch(e){}G.copied=true}
- if(a=='cont')cont();
- if(a=='dmove'){me.dm--;if(x=='pot')me.drop++;else tubeStep(me);if(me.dm<=0){me.dm=0;me.ph=me.after}}
- chkDm(me);
- render();
-}
-function cont(){
- const out=[...G.alive].sort((a,b)=>a.vp-b.vp||a.coins-b.coins)[0];
- G.alive=G.alive.filter(p=>p!==out);G.msg=out.name+' was eliminated.';
- if(out===G.ps[0]){G.stage='lost';return}
- if(G.alive.length==1){G.stage='won';return}
- G.alive.forEach(p=>Object.assign(p,mk(p.name,p.ai,p.risk)));
- G.round=1;G.gameNo++;deckInit();startRound();
-}
-const nm=k=>{const c=CH[k];return COL[c.col][0]+' '+c.v+(c.ver?' (set '+c.ver+')':'')};
-const chip=(k,x)=>{const c=CH[k];return`<span class="chip ${c.col} ${typeof x=='string'?x:''}" title="${nm(k)}" style="background:${c.hex}">${c.w||c.v}</span>`};
-function preset(t){'gbryp'.split('').forEach(x=>$('s_'+x).value=t=='r'?1+rnd(4):t)}
-function render0(){
- const A=$('app');
- if(!G){
-  A.innerHTML=`<h1>🧪 Quacks of Quedlinburg</h1><p class="mut">Prototype v3. Stay at 7 white points or under. ${togs()}</p>
-  <div class="card"><b>Ingredient sets</b><div class="mut">Orange and black are always in. Pick set 1-4 for each color, so you can mix sets.</div>
-  ${'gbryp'.split('').map(x=>`<div class="row" style="margin:4px 0">${chip(x+(x=='p'?'1':'2')+'_1')}<span style="flex:1">${COL[x][0]}</span><select id="s_${x}"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>`).join('')}
-  ${[1,2,3,4].map(i=>`<button class="alt" onclick="preset(${i})">Set ${i}</button>`).join('')}<button class="alt" onclick="preset('r')">Random mix</button>
-  <label class="row" style="margin-top:8px"><input type="checkbox" ${useTT?'checked':''} onchange="useTT=this.checked"><span>Advanced test-tube side (a second droplet track with bonuses)</span></label></div>
-  <div class="card"><b>📅 Daily challenge</b><p class="mut">${dayKey}: same sets (G${dailySets()[0]} B${dailySets()[1]} R${dailySets()[2]} Y${dailySets()[3]} P${dailySets()[4]}) and Fortune deck for everyone today. Best today: ${dBest||'-'}</p><button onclick="newGame('daily')">Play today's challenge</button></div>
-  <div class="card"><b>⚔️ Campaign: beat your rival</b><p class="mut">Duel a rival with a unique quirk over 9 rounds. Finish with more VP to win and unlock the next stage.</p>${stageList()}</div>
-  ${NET.room?`<div class="card"><b>📡 Online party (phones)</b><p class="mut">Friends join from their own phones with a room code, like Jackbox. One device hosts (a laptop or TV) and everyone plays on their phone. ${NET.viaPeer?'Friends open this same page, tap Join and type the code. No accounts needed.':'Everyone needs to be signed in and invited to this page.'}</p><button class="go" onclick="hostOpen()">Host a room</button><div class="row"><input id="jcode" maxlength="4" placeholder="CODE"><input id="jname" maxlength="14" placeholder="Your name"><button onclick="phoneJoin()">Join</button></div></div>`:''}
-  <div class="card"><b>👥 Party: pass and play</b><p class="mut">2-4 players share this device. Everyone brews in secret and the device is passed between turns. Add AI brewers if you like.</p>
-  <div class="row">Players <select id="np"><option>2</option><option>3</option><option>4</option></select> AI brewers <select id="pai"><option>0</option><option>1</option><option>2</option><option>3</option></select></div>
-  ${[1,2,3,4].map(i=>`<input id="pn${i}" maxlength="14" placeholder="Player ${i} name">`).join('')}
-  <div><button onclick="newGame('party')">Start party</button></div></div>
-  <div class="card"><b>Single player</b><p class="mut">9 rounds, high score. Black chips are compared to a simulated ghost opponent. Best: ${best} VP</p><button onclick="newGame('single')">Play</button></div>
-  <div class="card"><b>Survival</b><p class="mut">Vs 3 AI. Lowest score eliminated after each 9-round game. Trailing brewers get rat stones.</p><button onclick="newGame('survival')">Play</button></div>`;return}
- const me=viewer(),multi=humans().length>1,p=['play','shop'].includes(G.stage)?me.ph:G.stage,r=odds(me);
- if(me!==G.v){G.v=me;if(multi&&!['over','lost','won'].includes(G.stage))G.pass=true}
- if(G.pass&&multi&&!['over','lost','won'].includes(G.stage)){fizz(null);A.innerHTML=`<div class="card" style="text-align:center;margin-top:40px"><div style="font-size:54px">🔒</div><div class="big">Pass the device to ${me.name}</div><p class="mut">No peeking at other players' bags!</p><button class="go" onclick="act('unlock')">I'm ${me.name}, reveal my turn</button></div>`;return}
- const col=r<.2?'var(--ok)':r<.4?'#e0a020':'var(--bad)';
- let h=`<div class="row" style="justify-content:space-between"><h1>🧪 ${G.mode=='single'?'High Score':G.mode=='campaign'?'Stage '+(G.si+1):G.mode=='party'?'Party':'Survival'}</h1><span>${togs()}<button class="alt" onclick="act('bag')">🎒 Bag</button><button class="alt" onclick="act('menu')">Menu</button></span></div>
- <div class="mut">${multi?'👤 <b>'+me.name+'</b> · ':''}${G.mode=='survival'?'Game '+G.gameNo+' · ':''}Round ${Math.min(G.round,ROUNDS)}/${ROUNDS}${G.round>=2?' · Yellow':''}${G.round>=3?' · Purple':''} unlocked</div>
- ${G.st?`<div class="mut">⚔️ ${G.st.name}: ${G.st.desc}</div><div class="mut">⭐ Goals: ${G.st.goals.map(g=>g.t).join(' · ')}</div>`:''}<div class="card" style="padding:8px 12px"><b>${G.card<=12?'🟣':'🔵'} Fortune ${G.card}:</b> ${CARDS[G.card-1]}</div>
- ${G.tmsg?'<div class="card">'+G.tmsg+'</div>':''}${G.mode=='campaign'?vsBar():''}<div class="card"><table><tr><th>Brewer</th><th>VP</th><th>🪙</th><th>💎</th><th>Last round</th></tr>${G.ps.map(q=>`<tr class="${G.alive.includes(q)?'':'dead'}"><td>${q===me&&multi?'👉 ':''}${q.name}</td><td>${q.vp}</td><td>${q.coins}</td><td>${q.rub}</td><td class="mut">${q.last}</td></tr>`).join('')}</table>
- <div class="mut">Droplet at ${me.drop}${G.mode=='single'?'':' · Rat stone +'+me.rats} · Flask ${me.flask?'full':'empty'}</div>${G.tt?tubeRow(me):''}</div>`;
- if(p=='card'){const c=G.card;h+=`<div class="card"><b>Fortune choice</b><br>${c==5?`<button onclick="act('card','drop')">Droplet +1</button><button onclick="act('card','rub')">1 ruby</button>`:`<button onclick="act('card','use')" ${me.rub>=2?'':'disabled'}>${c==10?'Pay 2 💎: droplet +1':'Pay 2 💎: 1 VP'}</button><button class="alt" onclick="act('card','skip')">Skip</button>`}</div>`}
- if(p=='dmove'){const i=me.tt||0;
-  h+=`<div class="card"><b>💧 Move your droplet</b> <span class="mut">(${me.dm} left)</span>${tubeRow(me)}
-  <div style="margin-top:8px"><button onclick="act('dmove','pot')">Pot droplet: start +1 space (now ${me.drop})</button></div>
-  <div><button ${i>=12?'disabled':''} onclick="act('dmove','tube')">Test tube: ${i<12?tubeTxt(TUBE[i]):'finished'}</button></div></div>`}
- if(p=='dec'){const t=me.dq[0],l2=me.pot.slice(-2).filter(e=>CH[e.k].col=='g').length;
-  h+=`<div class="card"><b>${t=='g'?'🟢 Green bonus: pay rubies to move your droplet?':'🟣 Purple bonus: trade up a chip?'}</b><div class="mut">${t=='g'?`Each green in your last two spots lets you pay 1 💎 for 1 droplet move. You have ${me.rub} 💎.`:`You have ${nc(me,'p').length} purple chip(s). Pick one upgrade; it takes effect from the next round.`}</div>
-  <div class="pot" style="margin:8px 0">${me.pot.map(e=>chip(e.k)).join('')}</div>
-  ${t=='g'?[...Array(Math.min(l2,me.rub)+1).keys()].map(i=>`<button class="${i?'':'alt'}" onclick="act('dec',${i})">${i?'Pay '+i+' 💎: droplet +'+i:'Skip'}</button>`).join(''):me.uo.map((o,i)=>`<button onclick="act('dec',${i})">${chip(o.k)} ${COL[CH[o.k].col][0]} ${CH[o.k].v} → ${o.to}</button>`).join('')+`<button class="alt" onclick="act('dec',-1)">Skip</button>`}</div>`}
- if(['draw','boom','pick'].includes(p)){
-  const s=sc(me),l=me.pot[me.pot.length-1],lim=thr(me),w=wsum(me);
-  h+=scene(me)+`<div class="card"><div class="track">${Array.from({length:54},(_,i)=>{const e=me.pot.find(q=>q.f==i);return`<div class="cell ${i==s?'sc':''} ${i==start(me)?'dr':''} ${RUBYF.includes(i)?'rb':''}" style="${e?'background:'+CH[e.k].hex+';color:#222':''}">${i}${RUBYF.includes(i)?'◆':''}</div>`}).join('')}</div>
-  <div class="mut">Pot fields; ◆ = ruby, green bar = droplet, outline = scoring field ${s}: <b>${TV[s]} VP · ${TC[s]}🪙</b></div></div>
-  <div class="card"><div class="pot">${me.pot.map((e,i)=>chip(e.k,G.fresh&&i==me.pot.length-1?'pop':'')).join('')||'<span class="mut">Cauldron is empty</span>'}${me.aside.map(k=>chip(k)).join('')}</div>
-  <div class="mut">White total: <b style="color:${w>=lim-2?'var(--bad)':'inherit'}">${w}</b> / ${lim}${me.safe?' · Safe from explosion cost for '+me.safe+' more chip(s)':''}${me.aside.length?' · '+me.aside.length+' red set aside (placed when you stop)':''}</div></div>`;
-  if(p=='draw'){
-   const bad=me.bag.filter(k=>CH[k].w&&w+CH[k].w>lim).length;
-   h+=stopPreview(me)+`<div class="card"><div class="row" style="justify-content:space-between"><b>Explosion odds</b><span class="big" style="color:${col}">${Math.round(r*100)}%</span></div>
-   <div class="bar"><div style="width:${r*100}%;background:${col}"></div></div><div class="mut">${bad} of ${me.bag.length} chips in the bag would blow up your next draw.</div></div>
-   <button class="go" onclick="act('draw')" ${me.bag.length?'':'disabled'}>Draw chip</button><button class="stop" onclick="act('stop')">Stop &amp; collect</button>
-   <button class="alt" onclick="act('flask')" ${me.flask&&l&&CH[l.k].w?'':'disabled'}>🧪 Use flask</button>`;
-  }else if(p=='pick'){
-   h+=`<div class="card"><b>Choose a chip to place</b> <span class="mut">(the rest go back)</span><div class="row">${me.pend.map((k,i)=>`<button class="alt" onclick="act('pick',${i})">${chip(k)}</button>`).join('')}<button class="alt" onclick="act('pick',-1)">None</button></div></div>`;
-  }else{
-   h+=`<div class="card" style="border-color:var(--bad)"><b>💥 Boom!</b> Choose one reward:<br>
-   <button onclick="act('choose','coins')">${TC[s]} coins</button><button onclick="act('choose','vp')">${TV[s]} VP</button></div>`;
-  }
- }
- if(p=='shop'){
-  h+=`<div class="card"><b>Rubies 💎${me.rub}</b><br><button onclick="act('drop')" ${me.rub>=dc()?'':'disabled'}>Droplet +1 (${dc()}💎)</button><button onclick="act('fill')" ${me.rub>=fc()&&!me.flask?'':'disabled'}>Refill flask (${fc()}💎)</button>${G.card==24?`<button onclick="act('trade')" ${me.rub?'':'disabled'}>1💎 → 1 VP</button>`:''}</div>
-  <div class="card"><b>Shop</b> · 🪙${me.coins} · Up to 2 chips, ${G.card==16?'same colors allowed':'different colors'} (${2-me.buys} left)${Object.keys(CH).filter(k=>avail(CH[k])).map(k=>{const c=CH[k];return`<div class="row" style="margin:6px 0">${chip(k)}<div style="flex:1;min-width:0"><b>${COL[c.col][0]} ${c.v}</b> · ${price(c,me)}🪙<div class="mut">${dsc(c)}</div></div><button onclick="act('buy','${k}')" ${me.buys<2&&(!me.cols.includes(c.col)||G.card==16)&&me.coins>=price(c,me)?'':'disabled'}>Buy</button></div>`}).join('')}</div>
-  <button class="go" onclick="act('next')">Next round</button>`;
- }
- if(p=='over'){
-  const s=[...G.alive].sort((a,b)=>b.vp-a.vp);
-  h+=`<div class="card"><b>Game over</b><div class="mut">Includes 1 VP per 5 coins and per 2 rubies left.</div><table>${s.map((q,i)=>`<tr><td>${i+1}. ${q.name}</td><td>${q.vp} VP</td></tr>`).join('')}</table></div>`;
-  h+=G.mode=='campaign'?campOver():G.mode=='party'?partyOver():G.daily?`<p>Daily score: <b>${me.vp}</b> · Best today: ${dBest}</p><button onclick="act('share')">${G.copied?'Copied!':'📋 Copy result'}</button><button onclick="act('again')">Play again</button>`:G.mode=='single'?`<p>Your score: <b>${me.vp}</b> · Best: ${best}</p><button onclick="act('again')">Play again</button>`:`<button onclick="act('cont')">Eliminate lowest &amp; continue</button>`;
- }
- if(p=='lost')h+=`<div class="card"><b>${G.msg}</b> You're out after ${G.gameNo} game(s).</div><button onclick="act('menu')">Menu</button>`;
- if(p=='won')h+=`<div class="card"><b>🏆 ${G.msg} You are the last brewer standing!</b></div><button onclick="act('menu')">Menu</button>`;
- if(G.bag){
-  const cnt={},rem={};[...me.bag,...me.pot.map(e=>e.k),...(me.pend||[]),...me.aside].forEach(k=>cnt[k]=(cnt[k]||0)+1);me.bag.forEach(k=>rem[k]=(rem[k]||0)+1);
-  h+=`<div class="modal" onclick="act('bag')"><div class="card" onclick="event.stopPropagation()"><b>Your bag</b> <span class="mut">(in bag / owned)</span>${Object.keys(cnt).sort().map(k=>`<div class="row" style="margin:6px 0">${chip(k)}<span style="flex:1">${nm(k)}</span><b>${rem[k]||0} / ${cnt[k]}</b></div>`).join('')}<button onclick="act('bag')">Close</button></div></div>`;
- }
- if(p=='ready')h+=`<div class="card"><b>⏳ Waiting for the other players to finish shopping…</b></div>`;
- if(p=='wait')h+=`<div class="card"><b>⏳ Waiting for the other brewers to finish their potions…</b></div>`;
- if(live()&&G.alive.some(q=>q.ai)&&['draw','boom','pick','wait','card','dec'].includes(p))h+=`<div class="card"><b>Rivals</b> <span class="mut">(drawing live)</span><div id="aip">${aiPanel()}</div></div>`;
- if(me.sum&&!me.seen&&(p=='shop'||p=='over')){const S=me.sum,d=S.d,T=[['VP','⭐',d[0]],['Coins','🪙',d[1]],['Rubies','💎',d[2]],['Droplet','💧',d[3]]];
-  h+=`<div class="modal"><div class="card"><b class="big">Round ${S.round} results</b>
-  <div class="pot" style="margin:8px 0">${S.pot.map(e=>chip(e.k)).join('')||'<span class="mut">Empty pot</span>'}${S.boom&&!S.prot?'<span style="font-size:26px">💥</span>':''}</div>
-  ${dieBox(S)}<div class="${S.die&&!S.dieDone?'later':''}"><div class="row" style="margin:6px 0;flex-wrap:nowrap">${T.map((t,i)=>`<div class="tile" style="animation-delay:${i*.12}s"><div>${t[1]}</div><div class="big">${t[2]>0?'+':''}${t[2]}</div><div class="mut">${t[0]}</div></div>`).join('')}</div>
-  ${S.lines.map(l=>`<div class="row" style="margin:5px 0;flex-wrap:nowrap"><span style="font-size:20px">${l.i}</span><span style="flex:1">${l.t}</span><span class="row" style="gap:3px">${(l.chips||[]).map(chip).join('')}</span></div>`).join('')}
-  </div>${S.others.length?`<div class="mut" style="margin-top:8px">${S.others.map(o=>o[0]+': '+o[1]).join(' · ')}</div>`:''}
-  <button class="go" onclick="act('seen')">${p=='over'?'See final scores':'Continue to shop'}</button></div></div>`}
- A.innerHTML=h;rollAnim();fizz(['draw','pick'].includes(p)?Math.min(1,wsum(me)/thr(me)):null);
-}
-/* ---------------- online party (host + phones) ---------------- */
-const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const mkCode=()=>Array.from({length:4},()=>'BCDFGHJKLMNPQRSTVWXZ'[Math.floor(Math.random()*20)]).join('');
-const ALLOW={draw:['draw'],stop:['draw'],flask:['draw'],pick:['pick'],choose:['boom'],dec:['dec'],dmove:['dmove'],card:['card'],buy:['shop'],trade:['shop'],fill:['shop'],drop:['shop'],next:['shop'],seen:['shop','over']};
-const STAT={draw:'🎲 drawing',pick:'🎲 choosing',boom:'💥 exploded',dec:'🤔 deciding',dmove:'🤔 deciding',card:'🤔 deciding',wait:'✋ stopped',shop:'🛒 shopping',ready:'✅ ready',over:'🏁 done'};
-function makeMqttRoom(){
- const BR=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081'];
- return{join:(name,role)=>new Promise((resolve,reject)=>{
-  const base='quackspty/'+name.replace(/[^a-z0-9]/gi,'').toLowerCase(),id=(role=='host'?'h':'p')+Math.random().toString(36).slice(2,10);
-  const handlers={},peerCbs=[],connCbs=[],known={},me={peer:id,presence:{}};let cl=null,bi=0,opened=false,wd=0;
-  const fire=()=>peerCbs.forEach(f=>{try{f({joined:[],left:[]})}catch(e){}});
-  const pubPres=()=>{known[id]={p:me.presence,rt:Date.now()};if(cl&&cl.connected)cl.publish(base+'/pres/'+id,JSON.stringify({p:me.presence}),{retain:true,qos:0})};
-  const R={presence(p){me.presence=Object.assign({},me.presence,p);pubPres();fire();return Promise.resolve()},
-   emit(t,d){if(cl&&cl.connected)cl.publish(base+'/m',JSON.stringify({t,d,f:id}),{qos:0});return Promise.resolve()},
-   on(t,f){handlers[t]=f},onPeers(f){peerCbs.push(f)},onConnection(f){connCbs.push(f)},
-   peers(){const n=Date.now();return Object.keys(known).filter(k=>k==id||n-known[k].rt<16000).map(k=>({peer:k,presence:known[k].p,isMe:k==id,sameTab:k==id}))}};
-  const onMsg=(topic,payload)=>{const str=payload.toString();
-   if(topic.startsWith(base+'/pres/')){const k=topic.slice(base.length+6);if(k==id)return;if(!str)delete known[k];else{try{known[k]={p:JSON.parse(str).p,rt:Date.now()}}catch(e){return}}fire();return}
-   if(topic==base+'/m'){let o;try{o=JSON.parse(str)}catch(e){return}const h=handlers[o.t];if(h)h({data:o.d,peer:o.f,isMe:o.f==id,sameTab:o.f==id})}};
-  const attempt=()=>{clearTimeout(wd);try{if(cl)cl.end(true)}catch(e){}
-   cl=mqtt.connect(BR[bi%BR.length],{clientId:'qp_'+id+'_'+bi,clean:true,keepalive:15,reconnectPeriod:2500,connectTimeout:6000,will:{topic:base+'/pres/'+id,payload:'',retain:true,qos:0}});
-   cl.on('connect',()=>{clearTimeout(wd);cl.subscribe(base+'/#',{qos:0},()=>{pubPres();if(!opened){opened=true;setInterval(()=>{pubPres();fire()},5000);resolve(R)}});connCbs.forEach(f=>f(true))});
-   cl.on('message',onMsg);cl.on('close',()=>connCbs.forEach(f=>f(false)));cl.on('error',()=>{});
-   if(!opened)wd=setTimeout(()=>{if(opened)return;bi++;if(bi>=BR.length*2){reject(new Error('relay-unreachable'));return}attempt()},7000)};
-  attempt()})}}
-(async()=>{try{NET.room=await window.claude.use('room')}catch(e){NET.room=null}
- if(!NET.room&&typeof window!='undefined'&&!window.claude&&window.mqtt){NET.room=makeMqttRoom();NET.viaPeer=true}
- if(!G&&!NET.role)render()})();
-function render(){
- if(NET.role=='host'){renderHost();bcSoon();return}
- if(NET.role=='phone'&&(!G||!G.net||!G.me)){renderPhoneLobby();return}
- renderMain();
- if(NET.role=='phone'){const a=$('app');if(a.insertAdjacentHTML){a.insertAdjacentHTML('afterbegin','<div id="nb" class="nb" style="display:none"></div>');a.insertAdjacentHTML('beforeend','<div class="row" style="justify-content:center;margin:12px 0">'+RXS.map(e=>`<button class="alt" onclick="react(\'${e}\')">${e}</button>`).join('')+'</div>');netBanner()}}}
+ debris.forEach(q=>q.bag.push('x1'));
+ A.filter(p=>!p.ai).forEach(p=>{p.sum.others=A.filter(q=>q!==p).map(q=>[q.name,q.last]);p.seen=false});
+ const fin=A.some(p=>p.total>=FIN)||G.leg>=MAXL;
+ if(fin){G.stage='over';A.forEach(p=>{if(!p.ai)p.ph='over'});
+  if(solo&&A[0].total>=FIN&&(!bestT||G.leg<bestT)){bestT=G.leg;try{localStorage.setItem('redlineBest',bestT)}catch(e){}}return}
+ A.filter(p=>p.ai).forEach(aiShop);G.stage='shop';A.filter(p=>!p.ai).forEach(p=>{p.ph='shop';p.buys=0})}
+function nextLeg(){G.leg++;startLeg()}
+function newGame(cfg){
+ cfg=cfg||readCfg();G={cfg,ps:[],leg:1,stage:'play',every:cfg.every||1,deck:[],card:null};
+ const solo=cfg.names.length+cfg.ai==1;
+ cfg.names.forEach((n,i)=>G.ps.push(mk(n||PIL[cfg.pilots[i]].n,false,cfg.pilots[i],solo)));
+ const left=PK.filter(k=>!cfg.pilots.includes(k));
+ for(let i=0;i<cfg.ai;i++)G.ps.push(mk(PIL[left[i]].n,true,left[i],false));
+ G.solo=solo;startLeg();render()}
+function readCfg(){const n=+($('np')&&$('np').value)||1,names=[],pilots=[];
+ for(let i=1;i<=n;i++){const e=$('pn'+i),sl=$('pp'+i);names.push(((e&&e.value)||'').replace(/[<>&"]/g,'').slice(0,14));let pk=(sl&&sl.value)||PK[i-1];if(pilots.includes(pk)||!PIL[pk])pk=PK.find(k=>!pilots.includes(k));pilots.push(pk)}
+ return{names,pilots,ai:Math.min(+($('pai')&&$('pai').value)||0,4-n),every:+($('se')&&$('se').value)||1}}
 function act(a,x,pl){
- if(NET.role=='phone'){if(a=='bag'){G.bag=!G.bag;render()}else if(a=='menu')netLeave();else if(G&&G.net)sendAct(a,x);return}
- if(NET.role=='host'){if(a=='menu'){netLeave();return}if(a=='again'){hostRematch();return}}
- actE(a,x,pl)}
-function netLeave(){clearTimeout(TM);clearTimeout(NET.bcT);clearInterval(NET.hb);clearInterval(NET.af);Object.assign(NET,{role:null,R:null,seats:[],q:[],haveMe:false,seat:-1,lobby:null,hostSeen:0});G=null;fizz(null);render()}
-function netWire(){const R=NET.R;
- R.onPeers(netPeers,()=>{});R.on('act',netOnAct,()=>{});R.on('pub',netOnPub,()=>{});R.on('me',netOnMe,()=>{});R.on('rx',netOnRx,()=>{});
- R.onConnection(c=>{NET.conn=c;if(c&&NET.role=='phone')sendAct('hello');if(NET.role=='host')renderHost()})}
-const phones=()=>NET.R?NET.R.peers().filter(p=>p.presence&&p.presence.role=='phone'&&!NET.kicked.has(p.peer)):[];
-const RXS=['😂','😱','🔥','👏','💀','🥲'];
-/* host */
-function hostOpen(){if(!NET.room)return;NET.code=mkCode();NET.role='host';NET.R=null;NET.seats=[];render();
- NET.room.join('q-'+NET.code.toLowerCase(),'host').then(R=>{NET.R=R;netWire();R.presence({role:'host',name:'Host'});renderHost();
-  NET.hb=setInterval(()=>{if(NET.role=='host')bc()},3000);NET.af=setInterval(()=>{if(NET.role=='host'&&G&&G.net&&G.stage!='over')afk()},2000)})
- .catch(e=>{alert('Could not open a room: '+(e.code||e.message));NET.role=null;render()})}
-function hostStart(){const ph=phones().slice(0,4);if(!ph.length){alert('Wait for at least one player to join');return}
- const names=ph.map((p,i)=>String(p.presence.name||'Player '+(i+1)).replace(/[<>&"]/g,'').slice(0,14)||'Player '+(i+1));
- NET.seats=ph.map(p=>p.peer);
- newGame('party',0,{names,ai:Math.min(NET.ai,6-names.length)});
- G.net=true;G.ps.filter(p=>!p.ai).forEach(p=>{p.la=Date.now();p.netSeq=0});bc()}
-function hostRematch(){const old=G.ps.map(p=>p.netSeq||0);newGame('party',0,G.cfg);G.net=true;G.ps.filter(p=>!p.ai).forEach((p,i)=>{p.la=Date.now();p.netSeq=old[i]||0});bc()}
-function netPeers(){if(NET.role!='host')return;
- if(G&&G.net){phones().filter(p=>!NET.seats.includes(p.peer)).forEach(p=>{const nm=String(p.presence.name||'').replace(/[<>&"]/g,'').slice(0,14);
-   const i=G.ps.findIndex((q,j)=>!q.ai&&q.name===nm&&!phones().some(x=>x.peer==NET.seats[j]));if(i>=0){NET.seats[i]=p.peer;sendMe(i)}})}
+ if(a=='menu'){G=null;clearTimeout(TM);fizz(null);render();return}
+ const me=pl||viewer();G.fresh=false;G.cardNew=false;
+ if(a=='draw'){drawOne(me);G.fresh=true;const r=Math.min(1,heat(me)/lim(me));if(me.boom){sfxBoom();buzz(1,true);me.ph='boom'}else{sfxDraw(r);buzz(r)}}
+ if(a=='vent')ventUse(me);
+ if(a=='steady'&&me.sig&&me.pilot=='comet'){me.sig=false;me.keep=true}
+ if(a=='reroute'&&me.sig&&me.pilot=='nebula'&&me.bag.length){me.sig=false;me.nx=null}
+ if(a=='hj'&&me.sig&&me.pilot=='starlight'){me.sig=false;me.hj=3}
+ if(a=='scatter')scatter(me);
+ if(a=='stop'){sfxChime();buzz(.3);me.ph='wait';tryFinish()}
+ if(a=='cont'){me.ph='wait';tryFinish()}
+ if(a=='buy'){const pc=price(me,x);if(me.buys<2&&me.coins>=pc){me.coins-=pc;me.bag.push(x);me.buys++}}
+ if(a=='power'&&me.power<5&&me.coins>=PWR[me.power]){me.coins-=PWR[me.power];me.power++}
+ if(a=='recharge'&&!me.vent&&me.coins>=VENT){me.coins-=VENT;me.vent=true}
+ if(a=='seen')me.seen=true;
+ if(a=='unlock')G.pass=false;
+ if(a=='next'){me.ph='ready';if(G.ps.every(q=>q.ai||q.ph=='ready'))nextLeg()}
+ if(a=='again')newGame(G.cfg);
+ if(a=='bag')G.bag=!G.bag;
  render()}
-function netOnAct(m){if(NET.role!='host'||m.sameTab||!m.data||!G||!G.net)return;const d=m.data,i=NET.seats.indexOf(m.peer);if(i<0)return;const p=G.ps[i];if(!p)return;
- if(d.a=='hello'){sendMe(i);bc();return}
- if(typeof d.seq!='number'||d.seq<=(p.netSeq||0))return;
- p.netSeq=d.seq;p.la=Date.now();
- if(!ALLOW[d.a]||!ALLOW[d.a].includes(p.ph)){sendMe(i);return}
- const x=(typeof d.x=='string'||typeof d.x=='number')?d.x:null;
- actE(d.a,x,p);bcSoon()}
-function afkLeft(p,i){if(!G||!G.net||G.stage=='over'||idle(p)||p.ph=='over')return null;const H=G.ps.filter(q=>!q.ai);if(!H.some(q=>q!==p&&idle(q)))return null;
- const away=!phones().some(x=>x.peer==NET.seats[i]),lim=away?12000:75000;return Math.max(0,Math.ceil((lim-(Date.now()-(p.la||Date.now())))/1000))}
-function afk(){G.ps.filter(p=>!p.ai).forEach((p,i)=>{if(afkLeft(p,i)===0){const away=!phones().some(x=>x.peer==NET.seats[i]);p.la=Date.now()-(away?12000:75000)+4000;p.ap=(p.ap||0)+1;autoStep(p)}})}
-function autoStep(p){const ph=p.ph;
- if(ph=='card')actE('card','skip',p);else if(ph=='dmove')actE('dmove','pot',p);else if(ph=='draw')actE('stop',null,p);
- else if(ph=='pick')actE('pick',-1,p);else if(ph=='boom')actE('choose','coins',p);else if(ph=='dec')actE('dec',p.dq[0]=='g'?0:-1,p);
- else if(ph=='shop')actE(p.seen?'next':'seen',null,p)}
-const pubP=p=>({n:p.name,ai:p.ai?1:0,vp:p.vp,c:p.coins,rb:p.rub,d:p.drop,t:p.tt,rt:p.rats,ph:p.ph,l:p.last,po:p.pot.map(e=>e.k),bm:p.boom?1:0,dn:p.done?1:0,al:G.alive.includes(p)?1:0});
-function pubMsg(){if(!G||!G.net)return{st:'lobby',L:phones().map(p=>p.presence.name+(p.presence.ready?' ✅':'')),code:NET.code,kick:[...NET.kicked]};
- return{st:G.stage,r:G.round,cd:G.card,sets:G.sets,tt:G.tt?1:0,gn:G.gameNo,ps:G.ps.map(pubP)}}
-function meMsg(i){const p=G.ps[i],o={};for(const k in p){if(k=='_m'||k=='b0'||k=='stat'||k=='la')continue;o[k]=p[k]}o.seat=i;o.to=NET.seats[i];o.ack=p.netSeq||0;o.dl=afkLeft(p,i);o.ap=p.ap||0;return o}
-function sendMe(i){if(NET.R&&G&&G.net&&G.ps[i]&&NET.seats[i])NET.R.emit('me',meMsg(i)).catch(()=>{})}
-function bc(){if(!NET.R||NET.role!='host')return;NET.R.emit('pub',pubMsg()).catch(()=>{});if(G&&G.net)for(let i=0;i<NET.seats.length;i++)sendMe(i)}
-function bcSoon(){clearTimeout(NET.bcT);NET.bcT=setTimeout(bc,100)}
-function renderHost(){const A=$('app'),R=NET.R;
- if(!R){A.innerHTML='<div class="card">Opening room…</div>';return}
- if(!G||!G.net){const ph=phones();
-  A.innerHTML=`<h1>🧪 Quacks Online Party</h1><div class="card" style="text-align:center"><div class="mut">On your phone choose “Join” and enter ${NET.viaPeer?(NET.conn?'· 📡 relay connected':'· ⏳ connecting to relay…'):''}</div><div class="code">${NET.code}</div></div>
-  <div class="card"><b>Players (${ph.length}/4)</b>${ph.map(p=>`<div class="row" style="justify-content:space-between;margin:6px 0;flex-wrap:nowrap"><span>📱 ${esc(p.presence.name)} ${p.presence.ready?'✅ ready':'⏳'}</span><button class="alt" onclick="kick('${encodeURIComponent(p.peer)}')">Remove</button></div>`).join('')||'<span class="mut">Waiting for friends to join…</span>'}</div>
-  <div class="card"><b>Game setup</b><div class="row" style="margin:6px 0">AI brewers <select onchange="NET.ai=+this.value">${[0,1,2,3].map(n=>`<option ${NET.ai==n?'selected':''}>${n}</option>`).join('')}</select></div>
-  ${'gbryp'.split('').map(x=>`<div class="row" style="margin:4px 0"><span style="flex:1">${COL[x][0]}</span><select id="s_${x}" onchange="lastSets.${x}=+this.value">${[1,2,3,4].map(v=>`<option ${lastSets[x]==v?'selected':''}>${v}</option>`).join('')}</select></div>`).join('')}
-  <label class="row"><input type="checkbox" ${useTT?'checked':''} onchange="useTT=this.checked"><span>Test-tube side</span></label></div>
-  <button class="go" onclick="hostStart()">${ph.length&&ph.every(p=>p.presence.ready)?'Start game':'Start anyway ('+ph.filter(p=>p.presence.ready).length+'/'+ph.length+' ready)'}</button><button class="alt" onclick="act('menu')">Cancel</button>`;return}
- const over=G.stage=='over';
- let h=`<div class="row" style="justify-content:space-between"><h1>🧪 Room ${NET.code}</h1><span class="mut">Round ${Math.min(G.round,ROUNDS)}/${ROUNDS} · Game ${G.gameNo}</span></div>
- <div class="card" style="padding:8px 12px"><b>${G.card<=12?'🟣':'🔵'} Fortune ${G.card}:</b> ${CARDS[G.card-1]}</div>
- ${waitBar()}${G.stage!='play'?recapHTML():''}<div class="card">${G.ps.map((p,i)=>{const away=!p.ai&&!phones().some(x=>x.peer==NET.seats[i]);
-  const st=p.ai?(p.done?(p.boom?'💥 exploded':'✋ stopped'):'🎲 drawing'):(away?'📴 away':STAT[p.ph]||'');
-  return`<div style="margin:8px 0"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b>${p.ai?'🤖 ':'📱 '}${esc(p.name)}</b><span class="mut">${st}</span><span><b>${p.vp}</b> VP · 🪙${p.coins} · 💎${p.rub}</span></div>
-  ${G.stage=='play'?`<div class="pot" style="min-height:26px;gap:3px">${p.pot.map(e=>chip(e.k,'mini')).join('')||'<span class="mut">empty</span>'}</div><div class="mut">white ${wsum(p)}/${thr(p)}</div>`:`<div class="mut">${esc(p.last||'')}</div>`}</div>`}).join('')}</div>`;
- if(over)h+=partyOver();
- A.innerHTML=h}
-function waitBar(){if(G.stage=='over')return'';const H=G.ps.filter(p=>!p.ai);if(!H.some(idle))return'';const w=H.map((p,i)=>({p,i})).filter(o=>!idle(o.p)&&o.p.ph!='over');if(!w.length)return'';
- return`<div class="card" style="padding:8px 12px;border-color:var(--acc)"><b>⏳ Waiting for:</b> ${w.map(o=>{const l=afkLeft(o.p,o.i);return esc(o.p.name)+(l!=null&&l<=40?' ('+l+'s)':'')}).join(', ')}</div>`}
-function recapHTML(){const A=G.ps.filter(p=>p.rc);if(!A.length)return'';const best=A.reduce((b,p)=>(!b||p.rc.dv>b.rc.dv)?p:b,null),bm=A.filter(p=>p.rc.boom).map(p=>esc(p.name));
- return`<div class="card"><b>📜 Round ${G.round} recap</b><div class="mut">Biggest round: <b>${esc(best.name)}</b> (+${best.rc.dv} VP). ${bm.length?'💥 Exploded: '+bm.join(', '):'Nobody exploded!'}</div>
- ${A.map(p=>`<div style="margin:8px 0"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b>${p.ai?'🤖 ':'📱 '}${esc(p.name)}</b><span>+${p.rc.dv} VP · +${p.rc.dc} 🪙${p.rc.die?' · 🎲 '+(DIE[p.rc.die]||''):''}</span></div><div class="pot" style="gap:3px;min-height:26px">${p.rc.pot.map(k=>chip(k,'mini')).join('')}${p.rc.boom?' 💥':''}</div></div>`).join('')}</div>`}
-/* phone */
-function phoneJoin(){const code=($('jcode').value||'').trim().toUpperCase(),name=($('jname').value||'').trim().replace(/[<>&"]/g,'').slice(0,14)||'Player';
- if(code.length!=4){alert('Enter the 4-letter code');return}
- Object.assign(NET,{role:'phone',code,name,seat:-1,q:[],seq:0,haveMe:false,hostSeen:0,lobby:null});G=null;
- NET.room.join('q-'+code.toLowerCase(),'phone').then(R=>{NET.R=R;netWire();R.presence({role:'phone',name,ready:false});NET.ready=false;NET.lastMsg=0;render();
-  NET.hb=setInterval(()=>{if(NET.role=='phone'){if(NET.q.length){if(NET.q[0].t>8)NET.q.shift();pump()}netBanner()}},1000);NET.hb2=0})
- .catch(e=>{alert('Could not join: '+(e.code||e.message));NET.role=null;render()})}
-function renderPhoneLobby(){const L=NET.lobby;
- if(typeof document.activeElement!='undefined'&&document.activeElement&&document.activeElement.id=='ln')return;
- $('app').innerHTML=`<h1>🧪 Room ${esc(NET.code)}</h1><div class="card"><b>${esc(NET.name)}</b> ${NET.hostSeen?'· connected ✅':(NET.viaPeer&&!NET.conn?'· connecting to the relay…':'· relay connected, looking for the host…')}<p class="mut">${NET.hostSeen?(L&&L.L?'In the room: '+L.L.map(esc).join(', ')+'. ':'')+'Tap Ready when you are set; the host starts the game.':'Check the code and make sure the host page is open.'}</p>
- <button class="${NET.ready?'go':''}" onclick="readyToggle()">${NET.ready?'✅ Ready (tap to undo)':'I am ready'}</button>
- <div class="row" style="margin-top:8px"><input id="ln" maxlength="14" placeholder="Change name" style="border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 10px;font:inherit;width:45%"><button class="alt" onclick="saveName()">Save name</button></div>
- <button class="alt" onclick="act('menu')">Leave</button></div>`}
-function pump(){const o=NET.q[0];if(!o||!NET.R)return;o.t++;NET.R.emit('act',{a:o.a,x:o.x,seq:o.seq}).catch(()=>{})}
-function sendAct(a,x){NET.q.push({a,x:x==null?null:x,seq:++NET.seq,t:0});if(a=='stop'){sfxChime();buzz(.3)}if(NET.q.length==1)pump()}
-function netPing(){const n=Date.now();if(NET.lastMsg&&n-NET.lastMsg>8000)NET.toast={text:'✅ Reconnected',until:n+3000};NET.lastMsg=n}
-function netBanner(){if(NET.role!='phone')return;const e=$('nb');if(!e||!e.style)return;const n=Date.now();let t='';
- if(NET.lastMsg&&n-NET.lastMsg>8000)t='📶 Connection lost. Reconnecting…';
- else if(NET.toast&&n<NET.toast.until)t=NET.toast.text;
- else if(NET.dl&&NET.dl.s!=null){const l=NET.dl.s-Math.floor((n-NET.dl.t)/1000);if(l<=40)t='⏱ Everyone is waiting for you! Auto-play in '+Math.max(0,l)+'s'}
- e.textContent=t;e.style.display=t?'block':'none'}
-function react(e){if(NET.role!='phone'||!NET.R||!RXS.includes(e))return;const n=Date.now();if(n-NET.rxT<900)return;NET.rxT=n;NET.R.emit('rx',{e,n:NET.name}).catch(()=>{})}
-function showRx(e,n){try{let c=document.getElementById('rxc');if(!c||!c.appendChild){if(!document.body||!document.createElement)return;c=document.createElement('div');c.id='rxc';c.className='rxc';document.body.appendChild(c)}
- const el=document.createElement('span');el.className='rxe';el.style.left=(8+Math.random()*80)+'%';el.innerHTML=e+'<small>'+esc(n)+'</small>';c.appendChild(el);setTimeout(()=>{try{el.remove()}catch(x){}},3300)}catch(x){}}
-function netOnRx(m){if(NET.role!='host'||m.sameTab||!m.data)return;const e=String(m.data.e||'');if(!RXS.includes(e))return;showRx(e,String(m.data.n||'').replace(/[<>&"]/g,'').slice(0,14))}
-function kick(l){NET.kicked.add(decodeURIComponent(l));bc();render()}
-function readyToggle(){NET.ready=!NET.ready;NET.R.presence({ready:NET.ready}).catch(()=>{});render()}
-function saveName(){const v=(($('ln')||{}).value||'').replace(/[<>&"]/g,'').slice(0,14).trim();if(!v)return;NET.name=v;NET.R.presence({name:v}).catch(()=>{});render()}
-function netOnPub(m){if(NET.role!='phone'||m.sameTab||!m.data)return;NET.hostSeen=1;const d=m.data;netPing();
- const my0=NET.R&&NET.R.peers().find(p=>p.isMe&&p.sameTab);if(d.kick&&my0&&d.kick.includes(my0.peer)){alert('The host removed you from the room.');netLeave();return}
- if(d.st=='lobby'){NET.lobby=d;if(G&&G.net){G=null;NET.haveMe=false}render();return}
- const first=!G||!G.net;
- if(first){G={mode:'party',net:true,ps:[],alive:[],bag:false,intro:false,pass:false,fresh:false,tmsg:'',st:null,si:0,cfg:null,daily:false};NET.haveMe=false}
- Object.assign(G,{stage:d.st,round:d.r,card:d.cd,sets:d.sets,tt:!!d.tt,gameNo:d.gn});
- d.ps.forEach((q,i)=>{let p=G.ps[i];if(!p)p=G.ps[i]={pot:[],bag:[],dq:[],uo:[],notes:[],sum:null,seen:true,stat:{boom:0,flask:0,col:{}},buys:0,cols:[],dm:0,flask:true};
-  const mine=i===NET.seat&&NET.haveMe;
-  Object.assign(p,{name:q.n,ai:!!q.ai});
-  if(!mine){Object.assign(p,{vp:q.vp,coins:q.c,rub:q.rb,drop:q.d,tt:q.t,rats:q.rt,ph:q.ph,last:q.l,boom:!!q.bm,done:!!q.dn,pot:q.po.map(k=>({k}))})}
-  else p.last=q.l});
- G.alive=G.ps.filter((p,i)=>d.ps[i].al);
- if(NET.pm){const pm=NET.pm;NET.pm=null;netApplyMe(pm)}
- render()}
-function netOnMe(m){if(NET.role!='phone'||m.sameTab||!m.data)return;const d=m.data,my=NET.R.peers().find(p=>p.isMe&&p.sameTab);
- if(!my||d.to!==my.peer)return;NET.hostSeen=1;netPing();
- if(d.ap>NET.ap)NET.toast={text:'⏱ The game auto-played a move for you.',until:Date.now()+4000};NET.ap=d.ap||0;NET.dl=d.dl==null?null:{s:d.dl,t:Date.now()};
- while(NET.q.length&&NET.q[0].seq<=d.ack)NET.q.shift();
- if(!G||!G.net||!G.ps[d.seat]){NET.pm=d;NET.seat=d.seat;return}
- netApplyMe(d);if(NET.q.length)pump()}
-function netApplyMe(d){NET.seat=d.seat;const p=G.ps[d.seat],prev=p.pot?p.pot.length:0,ps=p.sum;
- for(const k in d){if(k=='to'||k=='ack'||k=='seat'||k=='dl'||k=='ap')continue;p[k]=d[k]}
- if(ps&&p.sum&&ps.round===p.sum.round&&ps.die===p.sum.die){p.sum.anim=ps.anim;p.sum.dieDone=ps.dieDone}
- NET.haveMe=true;G.me=p;
- if(['draw','pick','boom'].includes(p.ph)&&p.pot.length>prev){G.fresh=true;cue(p)}else G.fresh=false;
- render()}
-
+/* ---- views ---- */
+const cell=(k,x)=>{const c=C[k];return`<span class="cl ${typeof x=='string'?x:''}" title="${c.n} ${c.v}" style="--c:${c.hex}"><i>${c.ic}</i><b>${c.v}</b></span>`};
+function aiPanel(){return G.ps.filter(p=>p.ai).map(p=>`<div style="margin:6px 0"><div class="row" style="justify-content:space-between"><b>${p.ship} ${p.name}</b><span class="mut">heat ${heat(p)}/${lim(p)} · ${p.boom?'💥 overheated':p.done?'✋ engines cut':'🔥 burning…'}</span></div><div class="pot" style="min-height:26px;gap:3px">${p.pot.map(e=>cell(e.k,'mini')).join('')||'<span class="mut">idle</span>'}</div></div>`).join('')}
+function scene(me){
+ const f=G.fresh&&me.pot.length,l=me.pot[me.pot.length-1],boom=me.ph=='boom',h=Math.min(1,heat(me)/lim(me));
+ const fc=h<.5?'#4de1d2':h<.8?'#ffb347':'#ff4a4a';
+ return`<div class="card scene ${boom?'hot':''}"><svg class="tank ${f?'shake':''}" viewBox="0 0 90 100"><rect x="14" y="16" width="62" height="74" rx="20" fill="#5b5fd6" stroke="#2a2a7a" stroke-width="3"/><rect x="30" y="8" width="30" height="12" rx="5" fill="#8f94ff" stroke="#2a2a7a" stroke-width="3"/><rect x="24" y="34" width="42" height="30" rx="10" fill="#cfe9ff" stroke="#2a2a7a" stroke-width="2"/><text x="45" y="56" text-anchor="middle" font-size="18" font-weight="800" fill="#2a2a7a">${me.bag.length}</text></svg>
+ <svg class="eng" viewBox="0 0 150 110"><path d="M40 12h70l12 40H28z" fill="#8f94ff" stroke="#2a2a7a" stroke-width="3"/><path d="M30 52h90l-14 22H44z" fill="#ff5fa2" stroke="#2a2a7a" stroke-width="3"/><g class="flame" style="transform:scaleY(${(.5+h*.9).toFixed(2)})"><path d="M52 74h46l-23 ${(26+h*8).toFixed(0)}z" fill="${boom?'#ff4a2a':fc}" opacity=".9"/><path d="M62 74h26l-13 ${(16+h*6).toFixed(0)}z" fill="#fff6c9"/></g><text x="75" y="40" text-anchor="middle" font-size="16" font-weight="800" fill="#1b1740">${heat(me)}/${lim(me)}</text></svg>
+ ${f&&l?`<div class="fly">${cell(l.k)}</div>`:''}${boom?'<div class="burst">💥</div><div class="flash"></div>':''}</div>`}
+const pilotCard=me=>{const P=PIL[me.pilot];return`<div class="card" style="padding:8px 12px"><b>${P.ic} ${P.n}</b> <span class="mut">· ${P.pas}<br>⭐ ${P.sig} <b>${me.sig?'READY':'used'}</b></span></div>`};
+const nebulaCard=(me,hv,lm)=>{if(!hasPeek(me)||!me.bag.length)return'';const k=me.bag[nx(me)],bad=hk(k)>0&&hv+hk(k)>lm;
+ return`<div class="card"><b>${me.pilot=='nebula'?'🔮 Star chart':'🗼 Lighthouse'}: next cell</b><div class="row" style="margin:6px 0">${cell(k)}<span>${C[k].n} ${C[k].v}${bad?' <b style="color:var(--bad)">would overheat you!</b>':''}</span></div>${me.pilot=='nebula'?`<button class="alt" onclick="act('reroute')" ${me.sig?'':'disabled'}>🔄 Reroute (once per game)</button>`:''}</div>`};
+function raceCard(me){return`<div class="card"><div class="row" style="justify-content:space-between"><b>🏁 Race to ${FIN}</b><span class="mut">Leg ${Math.min(G.leg,MAXL)}/${MAXL}</span></div>${G.ps.map(p=>`<div class="lane"><div class="row" style="justify-content:space-between"><span>${p===me&&humans().length>1?'👉 ':''}${p.ship} <b>${p.name}</b></span><span class="mut">🪙${p.coins} · ⚙️${p.power}</span><b>${p.total}</b></div><div class="trk"><div class="sh" style="left:${Math.max(4,Math.min(96,p.total/FIN*100))}%">${p.ship}</div><span class="fl">🏁</span></div></div>`).join('')}</div>`}
+function modalResults(me){const S=me.sum,T=[['⚡','Thrust',S.d[0]],['🪙','Credits',S.d[1]],['🛰️','Distance',S.d[2]+'/'+FIN],['☀️','Charge',S.d[3]]];
+ return`<div class="modal"><div class="card"><b class="big">Leg ${S.leg} results</b><div class="pot" style="margin:8px 0">${S.pot.map(k=>cell(k)).join('')||'<span class="mut">Engines never fired</span>'}${S.boom?'<span style="font-size:26px">💥</span>':''}</div>
+ <div class="row" style="flex-wrap:nowrap">${T.map((t,i)=>`<div class="tile" style="animation-delay:${i*.12}s"><div>${t[0]}</div><div class="big">${t[2]}</div><div class="mut">${t[1]}</div></div>`).join('')}</div>
+ ${S.L.map(l=>`<div class="row" style="margin:5px 0;flex-wrap:nowrap"><span style="font-size:20px">${l[0]}</span><span>${l[1]}</span></div>`).join('')}
+ ${S.others.length?`<div class="mut" style="margin-top:8px">${S.others.map(o=>o[0]+': '+o[1]).join(' · ')}</div>`:''}
+ <button class="go" onclick="act('seen')">${G.stage=='over'?'See final standings':'Visit the depot'}</button></div></div>`}
+function guide(){return`<div class="modal" onclick="REF=false;render()"><div class="card" onclick="event.stopPropagation()"><div class="row" style="justify-content:space-between"><b class="big">📖 Fuel guide</b><button class="alt" onclick="REF=false;render()">Close</button></div>
+ <div class="mut">Burn fuel cells one at a time. Each moves your gauge notch. Plasma adds heat: go over ${LIM} and you overheat. Cut engines in time to turn your notch into thrust and credits. First to ${FIN} distance wins; the leg after someone crosses is the last.</div>
+ <div class="row" style="margin:8px 0">${cell('p1')}${cell('p2')}${cell('p3')}<span class="mut" style="flex:1">Plasma: adds heat equal to its value.</span></div>
+ ${buyable().map(k=>`<div class="row" style="margin:6px 0;flex-wrap:nowrap">${cell(k)}<div><b>${C[k].n} ${C[k].v}</b> · ${C[k].cost}🪙<div class="mut">${C[k].d}</div></div></div>`).join('')}
+ <div class="row" style="margin:6px 0;flex-wrap:nowrap">${cell('x1')}<div class="mut">Debris: heat 1, jammed into your tank by a rival, gone after you burn it once.</div></div>
+ <div style="margin-top:10px"><b>🌠 Star cards</b> <span class="mut">(one per leg, or every other leg)</span>${STAR.map(c=>`<div class="row" style="margin:4px 0;flex-wrap:nowrap"><span style="font-size:20px">${c.ic}</span><span><b>${c.n}</b> <span class="mut">${c.t}</span></span></div>`).join('')}</div>
+ <div class="mut" style="margin-top:8px">⚙️ Engine power: each level starts your gauge 1 notch higher every leg. 🧪 Vent: once a leg, return the last plasma you burned (recharge at the depot).</div></div></div>`}
+function render(){
+ const A=$('app');
+ if(!G){A.innerHTML=`<h1>🚀 REDLINE</h1><div class="mut">A retro-space push-your-luck race. ${togs()}</div>
+ <div class="card"><b>Launch a race</b><p class="mut">Pilots share this device. One pilot with no rivals is a time trial: reach ${FIN} distance in as few legs as you can.${bestT?' Best: '+bestT+' legs.':''}</p>
+ <div class="row">Players <select id="np"><option>1</option><option>2</option><option>3</option><option>4</option></select> AI rivals <select id="pai"><option>0</option><option selected>1</option><option>2</option><option>3</option></select></div>
+ <div class="row" style="margin:4px 0">Star cards <select id="se"><option value="1">every leg</option><option value="2">every other leg</option></select></div>
+ ${[1,2,3,4].map(i=>`<div class="row" style="margin:4px 0"><input class="nm" id="pn${i}" maxlength="14" placeholder="Pilot ${i} name"><select id="pp${i}">${PK.map((k,j)=>`<option value="${k}" ${j==i-1?'selected':''}>${PIL[k].ic} ${PIL[k].n}</option>`).join('')}</select></div>`).join('')}
+ <div class="mut" style="margin:6px 0">${PK.map(k=>`${PIL[k].ic} <b>${PIL[k].n}</b>: ${PIL[k].pas} ⭐ ${PIL[k].sig}`).join('<br>')}</div>
+ <div><button class="go" onclick="newGame()">Start engines</button></div></div>
+ <div class="card"><b>How it plays</b><div class="mut">Draw fuel from your tank into your engine. Plasma adds heat, and too much overheats you. Everything else moves you along the gauge or does something clever. Cut engines to bank thrust and credits, then upgrade at the depot.</div></div>`;
+  if(REF)A.insertAdjacentHTML('beforeend',guide());return}
+ const me=viewer(),multi=humans().length>1,p=G.stage=='over'?'over':me.ph;
+ if(me!==G.v){G.v=me;if(multi&&G.stage!='over')G.pass=true}
+ if(G.pass&&multi&&G.stage!='over'){fizz(null);A.innerHTML=`<div class="card" style="text-align:center;margin-top:40px"><div style="font-size:54px">🔒</div><div class="big">Pass the device to ${me.name}</div><p class="mut">No peeking at other pilots' tanks!</p><button class="go" onclick="act('unlock')">I'm ${me.name}, ready</button></div>`;return}
+ let h=`<div class="row" style="justify-content:space-between"><h1>🚀 REDLINE</h1><span>${togs()}<button class="alt" onclick="act('bag')">🛢️ Tank</button><button class="alt" onclick="act('menu')">Menu</button></span></div>`;
+ h+=raceCard(me)+starCard()+pilotCard(me);
+ if(['draw','boom'].includes(p)){
+  const hv=heat(me),lm=lim(me),r=odds(me),col=r<.2?'var(--ok)':r<.4?'#e0a020':'var(--bad)',pos=end(me),th=thrust(pos);
+  h+=scene(me)+`<div class="card"><div class="row" style="justify-content:space-between"><b>Gauge notch ${pos}</b><span class="mut">${me.od?'⏩ next cell x2 ':''}${me.power?'⚙️ power +'+me.power:''}${me.c0?' ⬆ start bonus +'+me.c0:''}</span></div>
+  <div class="gauge" style="margin-top:6px">${Array.from({length:GN},(_,i)=>{const e=me.pot.find(q=>q.f==i);return`<div class="gc ${i==me.st?'st':''} ${i==pos?'now':''}" style="${e?'background:'+C[e.k].hex+';color:#222':''}">${e?C[e.k].ic:i}</div>`}).join('')}</div>
+  <div class="pot" style="margin-top:8px">${me.pot.map((e,i)=>cell(e.k,G.fresh&&i==me.pot.length-1?'pop':'')).join('')||'<span class="mut">Engines idle</span>'}</div></div>`;
+  if(p=='draw'){
+   const bad=me.bag.filter(k=>hk(k)>0&&hv+hk(k)>lm).length;
+   h+=nebulaCard(me,hv,lm)+`<div class="card"><b>If you cut engines now</b><div class="row" style="flex-wrap:nowrap;margin-top:6px"><div class="tile" style="animation:none"><div>⚡</div><div class="big">${th}</div><div class="mut">thrust</div></div><div class="tile" style="animation:none"><div>🪙</div><div class="big">${cred(pos)+cnt(me,'c')}</div><div class="mut">credits</div></div></div></div>
+   <div class="card"><div class="row" style="justify-content:space-between"><b>🔥 Overheat risk</b><span class="big" style="color:${col}">${Math.round(r*100)}%</span></div><div class="bar"><div style="width:${r*100}%;background:${col}"></div></div><div class="mut">Heat ${hv}/${lm}. ${bad} of ${me.bag.length} cells in your tank would overheat you.</div></div>
+   <button class="go" onclick="act('draw')" ${me.bag.length?'':'disabled'}>Burn a cell</button><button class="stop" onclick="act('stop')">Cut engines</button>
+   <button class="alt" onclick="act('vent')" ${me.vent&&me.pot.length&&C[me.pot[me.pot.length-1].k].f=='p'?'':'disabled'}>🧪 Vent last plasma</button>`}
+  else h+=`<div class="card" style="border-color:var(--bad)"><b>💥 Overheat!</b><div class="mut">Your engine coasts at half thrust, but you still collect your credits.</div>${me.pilot=='comet'&&me.sig?`<button class="go" onclick="act('steady')">👨‍🚀 Steady Hands: keep full thrust</button>`:''}${me.keep?'<div class="mut">Steady Hands armed: full thrust kept.</div>':''}<button onclick="act('cont')">Continue</button></div>`}
+ if(p=='wait')h+=`<div class="card"><b>⏳ Engines cut. Waiting for the other pilots…</b></div>`;
+ if(p=='ready')h+=`<div class="card"><b>⏳ Waiting for the other pilots to leave the depot…</b></div>`;
+ if(p=='shop'){
+  h+=`<div class="card"><b>🛠️ Fuel depot</b> · 🪙${me.coins} · up to 2 cells (${2-me.buys} left)
+  <div class="row" style="margin:8px 0;flex-wrap:nowrap"><span style="font-size:28px">⚙️</span><div style="flex:1"><b>Engine power ${me.power}/5</b><div class="mut">Start every leg 1 notch higher.</div></div><button onclick="act('power')" ${me.power<5&&me.coins>=PWR[me.power]?'':'disabled'}>${me.power<5?PWR[me.power]+'🪙':'Max'}</button></div>
+  <div class="row" style="margin:8px 0;flex-wrap:nowrap"><span style="font-size:28px">🧪</span><div style="flex:1"><b>Vent ${me.vent?'ready':'empty'}</b><div class="mut">Recharge your vent.</div></div><button onclick="act('recharge')" ${!me.vent&&me.coins>=VENT?'':'disabled'}>${VENT}🪙</button></div>
+  ${buyable().map(k=>`<div class="row" style="margin:6px 0;flex-wrap:nowrap">${cell(k)}<div style="flex:1;min-width:0"><b>${C[k].n} ${C[k].v}</b> · ${price(me,k)}🪙${price(me,k)<C[k].cost?' <b style="color:var(--ok)">(sale!)</b>':''}<div class="mut">${C[k].d}</div></div><button onclick="act('buy','${k}')" ${me.buys<2&&me.coins>=price(me,k)?'':'disabled'}>Buy</button></div>`).join('')}</div>
+  ${me.sig&&me.pilot=='starlight'?`<button onclick="act('hj')">🌟 Hyperjump: next leg +3 notches</button>`:''}${me.sig&&me.pilot=='rook'&&G.ps.length>1?`<button onclick="act('scatter')">🕶️ Scatter Debris on all rivals</button>`:''}${me.hj?'<div class="mut">🌟 Hyperjump armed for the next leg.</div>':''}<button class="go" onclick="act('next')">Launch next leg</button>`}
+ if(p=='over'){
+  const s=[...G.ps].sort((a,b)=>b.total-a.total||b.coins-a.coins),solo=G.ps.length==1,w=s[0],got=w.total>=FIN;
+  h+=`<div class="card" style="text-align:center"><div style="font-size:44px">${solo?(got?'🏆':'🛰️'):w.ship}</div><div class="big">${solo?(got?'Finished in '+G.leg+' leg'+(G.leg>1?'s':'')+'!':'Ran out of legs'):w.name+' wins!'}</div>
+  <div class="mut">${solo?(got?(G.leg<=7?'⭐⭐⭐ Hot-shot':G.leg==8?'⭐⭐ Solid flying':'⭐ Made it'):'Distance '+w.total+'/'+FIN):s.map(q=>q.name+' '+q.total).join(' · ')}${solo&&bestT?' · Best '+bestT+' legs':''}</div></div>
+  <button onclick="act('again')">Race again</button><button class="alt" onclick="act('menu')">Menu</button>`}
+ if(G.ps.some(q=>q.ai)&&['draw','boom','wait'].includes(p))h+=`<div class="card"><b>Rivals</b> <span class="mut">(burning live)</span><div id="aip">${aiPanel()}</div></div>`;
+ if(me.sum&&!me.seen&&['shop','over'].includes(p))h+=modalResults(me);
+ if(G.bag){const cn={},rm={};[...me.bag,...me.pot.map(e=>e.k)].forEach(k=>cn[k]=(cn[k]||0)+1);me.bag.forEach(k=>rm[k]=(rm[k]||0)+1);
+  h+=`<div class="modal" onclick="act('bag')"><div class="card" onclick="event.stopPropagation()"><b>Your tank</b> <span class="mut">(in tank / owned)</span>${Object.keys(cn).sort().map(k=>`<div class="row" style="margin:6px 0">${cell(k)}<span style="flex:1">${C[k].n} ${C[k].v}</span><b>${rm[k]||0} / ${cn[k]}</b></div>`).join('')}<button onclick="act('bag')">Close</button></div></div>`}
+ if(REF)h+=guide();
+ A.innerHTML=h;fizz(p=='draw'?Math.min(1,heat(me)/lim(me)):null)}
 render();
 </script></body></html>
