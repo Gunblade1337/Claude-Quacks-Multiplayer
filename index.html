@@ -62,7 +62,7 @@ input[id^=pn]{font:inherit;border:1px solid var(--line);background:var(--card);c
 .rxc{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30}
 .rxe{position:absolute;bottom:-40px;font-size:44px;text-align:center;animation:rise 3.2s ease-out forwards}.rxe small{display:block;font-size:12px;color:var(--ink)}
 @keyframes rise{to{transform:translateY(-70vh) scale(1.3);opacity:0}}
-</style><script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+</style><script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
 </head><body><div id="app"></div>
 <script>
 const ROUNDS=9,RUBYF=[5,9,13,16,20,24,28,30,34,36,40,42,46,50,52];
@@ -107,7 +107,7 @@ function rollAnim(){const S=G&&G.alive&&viewer().sum;if(!S||!S.die||S.dieDone||S
  const iv=setInterval(()=>{const d=$('die');if(d)d.textContent=fs[n++%fs.length];sfxTick();
   if(n>10){clearInterval(iv);S.dieDone=true;sfxChime();const d2=$('die'),t=$('dieT');if(d2){d2.textContent=FACE[S.die];d2.className='die land'}if(t)t.textContent='Bonus die: '+DIE[S.die]+'!'}},120)}
 let TM=0,useTT=false,REF=false,REFT='r';
-const NET={role:null,room:null,R:null,code:'',seat:-1,seats:[],ai:1,seq:0,q:[],bcT:0,hb:0,af:0,haveMe:false,hostSeen:0,lobby:null,pm:null,kicked:new Set(),rxT:0,lastMsg:0,toast:null,dl:null,ap:0,ready:false};
+const NET={role:null,room:null,R:null,code:'',seat:-1,seats:[],ai:1,seq:0,q:[],bcT:0,hb:0,af:0,conn:false,haveMe:false,hostSeen:0,lobby:null,pm:null,kicked:new Set(),rxT:0,lastMsg:0,toast:null,dl:null,ap:0,ready:false};
 const RULES=[['🎯 Goal','Play 9 rounds. The most VP wins (in solo, chase a high score).'],
 ['🧪 Brewing','Draw chips one at a time. Each chip moves along your pot by its value. White chips add up: more than 7 and the pot explodes. Stop whenever you like to score.'],
 ['📍 Scoring','Your scoring field is the one right after your last chip. It pays coins to spend and VP. Fields marked ◆ also give a ruby.'],
@@ -522,38 +522,28 @@ const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const mkCode=()=>Array.from({length:4},()=>'BCDFGHJKLMNPQRSTVWXZ'[Math.floor(Math.random()*20)]).join('');
 const ALLOW={draw:['draw'],stop:['draw'],flask:['draw'],pick:['pick'],choose:['boom'],dec:['dec'],dmove:['dmove'],card:['card'],buy:['shop'],trade:['shop'],fill:['shop'],drop:['shop'],next:['shop'],seen:['shop','over']};
 const STAT={draw:'🎲 drawing',pick:'🎲 choosing',boom:'💥 exploded',dec:'🤔 deciding',dmove:'🤔 deciding',card:'🤔 deciding',wait:'✋ stopped',shop:'🛒 shopping',ready:'✅ ready',over:'🏁 done'};
-function makePeerRoom(){
- const pid=n=>'quackspty-'+n.replace(/[^a-z0-9]/gi,'').toLowerCase();
+function makeMqttRoom(){
+ const BR=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081'];
  return{join:(name,role)=>new Promise((resolve,reject)=>{
-  const handlers={},peerCbs=[],connCbs=[],pres={},conns=new Map(),me={peer:null,presence:{}},isHost=role=='host',hostId=pid(name);
-  let hostConn=null,hostSeen=false,opened=false;
+  const base='quackspty/'+name.replace(/[^a-z0-9]/gi,'').toLowerCase(),id=(role=='host'?'h':'p')+Math.random().toString(36).slice(2,10);
+  const handlers={},peerCbs=[],connCbs=[],known={},me={peer:id,presence:{}};let cl=null,bi=0,opened=false,wd=0;
   const fire=()=>peerCbs.forEach(f=>{try{f({joined:[],left:[]})}catch(e){}});
-  const deliver=(t,d,from)=>{const h=handlers[t];if(h)h({data:d,peer:from,isMe:false,sameTab:false})};
-  const R={
-   presence(p){me.presence=Object.assign({},me.presence,p);if(isHost)fire();else if(hostConn&&hostConn.open){try{hostConn.send({k:'pres',p:me.presence})}catch(e){}}return Promise.resolve()},
-   emit(t,d){const m={k:'m',t,d};if(isHost)conns.forEach(c=>{if(c.open){try{c.send(m)}catch(e){}}});else if(hostConn&&hostConn.open){try{hostConn.send(m)}catch(e){}}return Promise.resolve()},
+  const pubPres=()=>{known[id]={p:me.presence,rt:Date.now()};if(cl&&cl.connected)cl.publish(base+'/pres/'+id,JSON.stringify({p:me.presence}),{retain:true,qos:0})};
+  const R={presence(p){me.presence=Object.assign({},me.presence,p);pubPres();fire();return Promise.resolve()},
+   emit(t,d){if(cl&&cl.connected)cl.publish(base+'/m',JSON.stringify({t,d,f:id}),{qos:0});return Promise.resolve()},
    on(t,f){handlers[t]=f},onPeers(f){peerCbs.push(f)},onConnection(f){connCbs.push(f)},
-   peers(){const self={peer:me.peer,presence:me.presence,isMe:true,sameTab:true};
-    if(isHost)return[self].concat([...conns.entries()].filter(([l,c])=>c.open&&pres[l]).map(([l])=>({peer:l,presence:pres[l],isMe:false,sameTab:false})));
-    return[self].concat(hostSeen?[{peer:hostId,presence:{role:'host',name:'Host'},isMe:false,sameTab:false}]:[])}};
-  if(isHost){const peer=new Peer(hostId);
-   peer.on('open',()=>{me.peer=hostId;opened=true;resolve(R)});
-   peer.on('error',e=>{if(!opened)reject(e)});
-   peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}});
-   peer.on('connection',conn=>{conn.on('open',()=>{conns.set(conn.peer,conn)});
-    conn.on('data',m=>{if(!m)return;if(m.k=='pres'){pres[conn.peer]=m.p;fire()}else if(m.k=='m')deliver(m.t,m.d,conn.peer)});
-    conn.on('close',()=>{if(conns.get(conn.peer)===conn){conns.delete(conn.peer);delete pres[conn.peer];fire()}});conn.on('error',()=>{})})}
-  else{const peer=new Peer();
-   const connect=()=>{if(NET.R&&NET.role!='phone')return;hostConn=peer.connect(hostId,{serialization:'json',reliable:true});
-    hostConn.on('open',()=>{hostSeen=true;try{hostConn.send({k:'pres',p:me.presence})}catch(e){}connCbs.forEach(f=>f(true))});
-    hostConn.on('data',m=>{if(m&&m.k=='m')deliver(m.t,m.d,hostId)});
-    hostConn.on('close',()=>{hostSeen=false;connCbs.forEach(f=>f(false));setTimeout(connect,2000)});hostConn.on('error',()=>{})};
-   peer.on('open',id=>{me.peer=id;opened=true;resolve(R);connect()});
-   peer.on('error',e=>{if(!opened)reject(e);else if(e&&e.type=='peer-unavailable')setTimeout(connect,2000)});
-   peer.on('disconnected',()=>{try{peer.reconnect()}catch(e){}})}
- })}}
+   peers(){const n=Date.now();return Object.keys(known).filter(k=>k==id||n-known[k].rt<16000).map(k=>({peer:k,presence:known[k].p,isMe:k==id,sameTab:k==id}))}};
+  const onMsg=(topic,payload)=>{const str=payload.toString();
+   if(topic.startsWith(base+'/pres/')){const k=topic.slice(base.length+6);if(k==id)return;if(!str)delete known[k];else{try{known[k]={p:JSON.parse(str).p,rt:Date.now()}}catch(e){return}}fire();return}
+   if(topic==base+'/m'){let o;try{o=JSON.parse(str)}catch(e){return}const h=handlers[o.t];if(h)h({data:o.d,peer:o.f,isMe:o.f==id,sameTab:o.f==id})}};
+  const attempt=()=>{clearTimeout(wd);try{if(cl)cl.end(true)}catch(e){}
+   cl=mqtt.connect(BR[bi%BR.length],{clientId:'qp_'+id+'_'+bi,clean:true,keepalive:15,reconnectPeriod:2500,connectTimeout:6000,will:{topic:base+'/pres/'+id,payload:'',retain:true,qos:0}});
+   cl.on('connect',()=>{clearTimeout(wd);cl.subscribe(base+'/#',{qos:0},()=>{pubPres();if(!opened){opened=true;setInterval(()=>{pubPres();fire()},5000);resolve(R)}});connCbs.forEach(f=>f(true))});
+   cl.on('message',onMsg);cl.on('close',()=>connCbs.forEach(f=>f(false)));cl.on('error',()=>{});
+   if(!opened)wd=setTimeout(()=>{if(opened)return;bi++;if(bi>=BR.length*2){reject(new Error('relay-unreachable'));return}attempt()},7000)};
+  attempt()})}}
 (async()=>{try{NET.room=await window.claude.use('room')}catch(e){NET.room=null}
- if(!NET.room&&typeof window!='undefined'&&!window.claude&&window.Peer){NET.room=makePeerRoom();NET.viaPeer=true}
+ if(!NET.room&&typeof window!='undefined'&&!window.claude&&window.mqtt){NET.room=makeMqttRoom();NET.viaPeer=true}
  if(!G&&!NET.role)render()})();
 function render(){
  if(NET.role=='host'){renderHost();bcSoon();return}
@@ -567,7 +557,7 @@ function act(a,x,pl){
 function netLeave(){clearTimeout(TM);clearTimeout(NET.bcT);clearInterval(NET.hb);clearInterval(NET.af);Object.assign(NET,{role:null,R:null,seats:[],q:[],haveMe:false,seat:-1,lobby:null,hostSeen:0});G=null;fizz(null);render()}
 function netWire(){const R=NET.R;
  R.onPeers(netPeers,()=>{});R.on('act',netOnAct,()=>{});R.on('pub',netOnPub,()=>{});R.on('me',netOnMe,()=>{});R.on('rx',netOnRx,()=>{});
- R.onConnection(c=>{if(c&&NET.role=='phone')sendAct('hello')})}
+ R.onConnection(c=>{NET.conn=c;if(c&&NET.role=='phone')sendAct('hello');if(NET.role=='host')renderHost()})}
 const phones=()=>NET.R?NET.R.peers().filter(p=>p.presence&&p.presence.role=='phone'&&!NET.kicked.has(p.peer)):[];
 const RXS=['😂','😱','🔥','👏','💀','🥲'];
 /* host */
@@ -609,7 +599,7 @@ function bcSoon(){clearTimeout(NET.bcT);NET.bcT=setTimeout(bc,100)}
 function renderHost(){const A=$('app'),R=NET.R;
  if(!R){A.innerHTML='<div class="card">Opening room…</div>';return}
  if(!G||!G.net){const ph=phones();
-  A.innerHTML=`<h1>🧪 Quacks Online Party</h1><div class="card" style="text-align:center"><div class="mut">On your phone choose “Join” and enter</div><div class="code">${NET.code}</div></div>
+  A.innerHTML=`<h1>🧪 Quacks Online Party</h1><div class="card" style="text-align:center"><div class="mut">On your phone choose “Join” and enter ${NET.viaPeer?(NET.conn?'· 📡 relay connected':'· ⏳ connecting to relay…'):''}</div><div class="code">${NET.code}</div></div>
   <div class="card"><b>Players (${ph.length}/4)</b>${ph.map(p=>`<div class="row" style="justify-content:space-between;margin:6px 0;flex-wrap:nowrap"><span>📱 ${esc(p.presence.name)} ${p.presence.ready?'✅ ready':'⏳'}</span><button class="alt" onclick="kick('${encodeURIComponent(p.peer)}')">Remove</button></div>`).join('')||'<span class="mut">Waiting for friends to join…</span>'}</div>
   <div class="card"><b>Game setup</b><div class="row" style="margin:6px 0">AI brewers <select onchange="NET.ai=+this.value">${[0,1,2,3].map(n=>`<option ${NET.ai==n?'selected':''}>${n}</option>`).join('')}</select></div>
   ${'gbryp'.split('').map(x=>`<div class="row" style="margin:4px 0"><span style="flex:1">${COL[x][0]}</span><select id="s_${x}" onchange="lastSets.${x}=+this.value">${[1,2,3,4].map(v=>`<option ${lastSets[x]==v?'selected':''}>${v}</option>`).join('')}</select></div>`).join('')}
@@ -638,7 +628,7 @@ function phoneJoin(){const code=($('jcode').value||'').trim().toUpperCase(),name
  .catch(e=>{alert('Could not join: '+(e.code||e.message));NET.role=null;render()})}
 function renderPhoneLobby(){const L=NET.lobby;
  if(typeof document.activeElement!='undefined'&&document.activeElement&&document.activeElement.id=='ln')return;
- $('app').innerHTML=`<h1>🧪 Room ${esc(NET.code)}</h1><div class="card"><b>${esc(NET.name)}</b> ${NET.hostSeen?'· connected ✅':'· looking for the host…'}<p class="mut">${NET.hostSeen?(L&&L.L?'In the room: '+L.L.map(esc).join(', ')+'. ':'')+'Tap Ready when you are set; the host starts the game.':'Check the code and make sure the host page is open.'}</p>
+ $('app').innerHTML=`<h1>🧪 Room ${esc(NET.code)}</h1><div class="card"><b>${esc(NET.name)}</b> ${NET.hostSeen?'· connected ✅':(NET.viaPeer&&!NET.conn?'· connecting to the relay…':'· relay connected, looking for the host…')}<p class="mut">${NET.hostSeen?(L&&L.L?'In the room: '+L.L.map(esc).join(', ')+'. ':'')+'Tap Ready when you are set; the host starts the game.':'Check the code and make sure the host page is open.'}</p>
  <button class="${NET.ready?'go':''}" onclick="readyToggle()">${NET.ready?'✅ Ready (tap to undo)':'I am ready'}</button>
  <div class="row" style="margin-top:8px"><input id="ln" maxlength="14" placeholder="Change name" style="border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 10px;font:inherit;width:45%"><button class="alt" onclick="saveName()">Save name</button></div>
  <button class="alt" onclick="act('menu')">Leave</button></div>`}
